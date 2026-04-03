@@ -37,7 +37,7 @@
   <div class="doc-card">
     <h3>Addressing Common Objections</h3>
     <p>Practical responses to the most frequently raised objections during the sales and implementation process.</p>
-    <a class="doc-btn" href="JOGR_implementation_ObjectionsClaude.html">Open Document</a>
+    <a class="doc-btn" href="JOGR_Implementation_ObjectionsClaude.html">Open Document</a>
   </div>
 
   <div class="doc-card">
