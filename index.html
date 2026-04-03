@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odoo Implementation Resources</title>
+<link rel="icon" href="https://www.odoo.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple:   #714B67;
+    --purple-dk:#5a3a52;
+    --purple-lt:rgba(113,75,103,0.15);
+    --teal:     #017E84;
+    --teal-lt:  #1ABC9C;
+    --blue:     #29ABE2;
+    --yellow:   #F5A623;
+    --coral:    #F06B7A;
+    --dark:     #0f0c14;
+    --dark-2:   #1a1425;
+    --glass:    rgba(255,255,255,0.05);
+    --glass-b:  rgba(255,255,255,0.09);
+    --border:   rgba(255,255,255,0.08);
+    --text:     #f0eaf5;
+    --muted:    rgba(240,234,245,0.5);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BACKGROUND ── */
+  .bg-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .bg-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.55;
+  }
+  .bg-blob-1 {
+    width: 700px; height: 700px;
+    top: -200px; left: -200px;
+    background: radial-gradient(circle, #714B67 0%, transparent 70%);
+  }
+  .bg-blob-2 {
+    width: 500px; height: 500px;
+    bottom: -100px; right: -100px;
+    background: radial-gradient(circle, #017E84 0%, transparent 70%);
+  }
+  .bg-blob-3 {
+    width: 400px; height: 400px;
+    top: 40%; left: 55%;
+    background: radial-gradient(circle, #29ABE2 0%, transparent 70%);
+    opacity: 0.2;
+  }
+
+  /* ── PAGE WRAP ── */
+  .page {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── NAVBAR ── */
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15,12,20,0.75);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 48px;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .navbar-logo {
+    height: 26px;
+    filter: brightness(0) invert(1);
+  }
+  .navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .navbar-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+  .navbar-sparkle {
+    color: var(--yellow);
+    font-size: 14px;
+    animation: sparkle 3s ease-in-out infinite;
+  }
+  @keyframes sparkle {
+    0%,100% { opacity:1; transform: scale(1) rotate(0deg); }
+    50%      { opacity:0.5; transform: scale(1.4) rotate(20deg); }
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 80px 48px 88px;
+    text-align: center;
+    position: relative;
+  }
+
+  /* Brush stroke SVG under hero title */
+  .hero-title-wrap {
+    display: inline-block;
+    position: relative;
+    margin-bottom: 4px;
+  }
+  .hero-title-wrap .brush {
+    position: absolute;
+    bottom: -14px;
+    left: 0;
+    width: 100%;
+    height: 14px;
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Caveat', cursive;
+    font-size: 1.3rem;
+    color: var(--blue);
+    margin-bottom: 20px;
+    display: block;
+    letter-spacing: 0.5px;
+  }
+
+  .hero h1 {
+    font-family: 'Caveat', cursive;
+    font-size: clamp(2.8rem, 6vw, 4.5rem);
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .hero h1 .accent {
+    color: var(--purple);
+    position: relative;
+  }
+
+  .hero-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    max-width: 480px;
+    margin: 28px auto 0;
+    line-height: 1.75;
+    font-weight: 400;
+  }
+
+  /* Sparkle accents */
+  .hero-sparkles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .sp {
+    position: absolute;
+    font-size: 1.4rem;
+    animation: sparkle 3s ease-in-out infinite;
+    color: var(--yellow);
+  }
+  .sp:nth-child(2) { animation-delay: 0.8s; color: var(--coral); font-size: 1rem; }
+  .sp:nth-child(3) { animation-delay: 1.6s; color: var(--teal-lt); font-size: 1.2rem; }
+  .sp:nth-child(4) { animation-delay: 0.4s; color: var(--blue); font-size: 0.9rem; }
+  .sp-1 { top: 18%; left: 8%; }
+  .sp-2 { top: 30%; right: 10%; }
+  .sp-3 { bottom: 20%; left: 12%; }
+  .sp-4 { top: 14%; right: 22%; }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 48px 80px;
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 56px 0 24px;
+  }
+  .section-head:first-child { margin-top: 0; }
+
+  .section-head-text {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .section-head-text span {
+    font-family: 'Caveat', cursive;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+    position: relative;
+    z-index: 1;
+  }
+  .section-brush {
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    pointer-events: none;
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── CARD GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 20px;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 30px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* top accent line */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 18px 18px 0 0;
+    background: linear-gradient(90deg, var(--purple), #a37096);
+  }
+  .card.c-blue::before   { background: linear-gradient(90deg, var(--blue), var(--teal-lt)); }
+  .card.c-teal::before   { background: linear-gradient(90deg, var(--teal), var(--teal-lt)); }
+  .card.c-yellow::before { background: linear-gradient(90deg, var(--yellow), var(--coral)); }
+
+  /* subtle inner glow */
+  .card::after {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(113,75,103,0.12), transparent 70%);
+    pointer-events: none;
+  }
+  .card.c-blue::after   { background: radial-gradient(circle, rgba(41,171,226,0.1), transparent 70%); }
+  .card.c-teal::after   { background: radial-gradient(circle, rgba(1,126,132,0.1), transparent 70%); }
+  .card.c-yellow::after { background: radial-gradient(circle, rgba(245,166,35,0.1), transparent 70%); }
+
+  .card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255,255,255,0.14);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.35), 0 0 0 1px rgba(113,75,103,0.25);
+  }
+  .card.c-blue:hover   { box-shadow: 0 24px 48px rgba(0,0,0,0.35), 0 0 0 1px rgba(41,171,226,0.25); }
+  .card.c-teal:hover   { box-shadow: 0 24px 48px rgba(0,0,0,0.35), 0 0 0 1px rgba(1,126,132,0.25); }
+  .card.c-yellow:hover { box-shadow: 0 24px 48px rgba(0,0,0,0.35), 0 0 0 1px rgba(245,166,35,0.25); }
+
+  .card-icon {
+    width: 46px; height: 46px;
+    border-radius: 12px;
+    background: rgba(113,75,103,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 18px;
+  }
+  .card.c-blue   .card-icon { background: rgba(41,171,226,0.15); }
+  .card.c-teal   .card-icon { background: rgba(1,126,132,0.15); }
+  .card.c-yellow .card-icon { background: rgba(245,166,35,0.15); }
+
+  .card h3 {
+    font-family: 'Caveat', cursive;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .card p {
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    font-weight: 400;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.83rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    transition: all 0.2s ease;
+    background: rgba(113,75,103,0.3);
+    color: #dbb8d4 !important;
+    border: 1px solid rgba(113,75,103,0.45);
+  }
+  .btn:hover {
+    background: rgba(113,75,103,0.55);
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+  .card.c-blue .btn {
+    background: rgba(41,171,226,0.15);
+    color: #8dd9f5 !important;
+    border-color: rgba(41,171,226,0.3);
+  }
+  .card.c-blue .btn:hover {
+    background: rgba(41,171,226,0.3);
+    color: #fff !important;
+  }
+  .card.c-teal .btn {
+    background: rgba(1,126,132,0.15);
+    color: #5ecdd1 !important;
+    border-color: rgba(1,126,132,0.3);
+  }
+  .card.c-teal .btn:hover {
+    background: rgba(1,126,132,0.3);
+    color: #fff !important;
+  }
+  .card.c-yellow .btn {
+    background: rgba(245,166,35,0.15);
+    color: #f7c96a !important;
+    border-color: rgba(245,166,35,0.3);
+  }
+  .card.c-yellow .btn:hover {
+    background: rgba(245,166,35,0.3);
+    color: #fff !important;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    border-top: 1px solid var(--border);
+    margin-top: 72px;
+    padding: 36px 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .footer img {
+    height: 20px;
+    filter: brightness(0) invert(1);
+    opacity: 0.25;
+  }
+  .footer p {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.2);
+  }
+
+  /* ── HAND-DRAWN ARROW (decorative) ── */
+  .arrow-deco {
+    display: block;
+    margin: 0 auto 8px;
+    opacity: 0.35;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+  <div class="bg-blob bg-blob-3"></div>
+</div>
+
+<div class="page">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <img src="https://odoocdn.com/openerp_website/static/src/img/assets/png/odoo_logo_inverted_small.png"
+         class="navbar-logo" alt="Odoo"/>
+    <div class="navbar-right">
+      <span class="navbar-sparkle">✦</span>
+      <span class="navbar-label">Implementation Resources</span>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-sparkles">
+      <span class="sp sp-1">✦</span>
+      <span class="sp sp-2">✦</span>
+      <span class="sp sp-3">✦</span>
+      <span class="sp sp-4">✦</span>
+    </div>
+
+    <span class="hero-eyebrow">Sales Training Hub</span>
+
+    <div class="hero-title-wrap">
+      <h1>Odoo <span class="accent">Implementation</span><br/>Resources</h1>
+      <!-- Blue brush stroke underline SVG -->
+      <svg class="brush" viewBox="0 0 400 14" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 10 Q60 3 120 8 Q180 13 240 7 Q300 2 360 9 Q380 11 396 8"
+              stroke="#29ABE2" stroke-width="5" fill="none"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <p class="hero-sub">Training and implementation guides for the Sales team.<br/>Everything you need, in one place.</p>
+  </section>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- Section: Implementation Guides -->
+    <div class="section-head">
+      <div class="section-head-text">
+        <span>📘 Implementation Guides</span>
+        <!-- Yellow brush underline -->
+        <svg class="section-brush" viewBox="0 0 200 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 6 Q50 1 100 5 Q150 9 198 4"
+                stroke="#F5A623" stroke-width="4" fill="none"
+                stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="grid">
+
+      <div class="card">
+        <div class="card-icon">📘</div>
+        <h3>Implementation Playbook</h3>
+        <p>A comprehensive guide covering the full Odoo implementation process from kickoff to go-live.</p>
+        <a class="btn" href="odoo_implementation_playbook.html">Open Document →</a>
+      </div>
+
+      <div class="card c-blue">
+        <div class="card-icon">📗</div>
+        <h3>Implementation Playbook V2</h3>
+        <p>Updated version of the implementation playbook with the latest methodology and best practices.</p>
+        <a class="btn" href="odoo_implementation_playbook_v2.html">Open Document →</a>
+      </div>
+
+    </div>
+
+    <!-- Hand-drawn arrow divider -->
+    <svg class="arrow-deco" width="48" height="40" viewBox="0 0 48 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M24 2 Q26 18 20 30 Q18 34 24 38 Q30 34 28 30 Q22 18 24 2"
+            stroke="#714B67" stroke-width="2.5" fill="none"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 32 Q24 40 30 32"
+            stroke="#714B67" stroke-width="2.5" fill="none"
+            stroke-linecap="round"/>
+    </svg>
+
+    <!-- Section: Sales & Objection Handling -->
+    <div class="section-head">
+      <div class="section-head-text">
+        <span>💬 Sales &amp; Objection Handling</span>
+        <!-- Coral brush underline -->
+        <svg class="section-brush" viewBox="0 0 260 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 6 Q65 1 130 5 Q195 9 258 4"
+                stroke="#F06B7A" stroke-width="4" fill="none"
+                stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="grid">
+
+      <div class="card c-teal">
+        <div class="card-icon">💬</div>
+        <h3>Addressing Common Objections</h3>
+        <p>Practical responses to the most frequently raised objections during the sales and implementation process.</p>
+        <a class="btn" href="JOGR_Implementation_Objections.html">Open Document →</a>
+      </div>
+
+      <div class="card c-yellow">
+        <div class="card-icon">⚡</div>
+        <h3>QuickStart Guidelines</h3>
+        <p>Step-by-step guidelines for running a successful Odoo QuickStart implementation.</p>
+        <a class="btn" href="JOGR_QuickStart_GuidelinesClaude.html">Open Document →</a>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <img src="https://odoocdn.com/openerp_website/static/src/img/assets/png/odoo_logo_inverted_small.png" alt="Odoo"/>
+      <p>For questions, contact your Sales Trainer.</p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
