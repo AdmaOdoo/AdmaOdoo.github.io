@@ -12,7 +12,7 @@ Use the links below to access each document.
 - [Odoo Implementation Playbook V2](odoo_implementation_playbook_v2.html)
 
 ### Sales & Objection Handling
-- [Addressing Common Implementation Objections](JOGR_implementation_ObjectionsClaude.html)
+- [Addressing Common Implementation Objections](JOGR_Implementation_ObjectionsClaude.html)
 - [QuickStart Guidelines](JOGR_QuickStart_GuidelinesClaude.html)
 
 ---
