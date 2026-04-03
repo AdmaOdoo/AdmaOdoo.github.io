@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Common Implementation Objections · Odoo</title>
+<link rel="icon" href="https://www.odoo.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple:  #714B67;
+    --purple-dk:#5a3a52;
+    --teal:    #017E84;
+    --teal-lt: #1ABC9C;
+    --blue:    #29ABE2;
+    --yellow:  #F5A623;
+    --coral:   #F06B7A;
+    --gray-bg: #F4F4F4;
+    --white:   #ffffff;
+    --text:    #2d2235;
+    --muted:   #6b5a70;
+    --border:  rgba(113,75,103,0.1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--gray-bg); color:var(--text); }
+
+  /* TOP BAR */
+  .topbar { background:var(--purple); padding:14px 48px; display:flex; align-items:center; gap:18px; box-shadow:0 2px 16px rgba(113,75,103,0.3); }
+  .topbar-logo { height:26px; }
+  .topbar-div  { width:1px; height:22px; background:rgba(255,255,255,0.3); }
+  .topbar-lbl  { font-size:13px; font-weight:500; color:rgba(255,255,255,0.7); letter-spacing:.4px; }
+
+  /* HERO */
+  .hero { background:var(--purple); padding:52px 60px 60px; position:relative; overflow:hidden; }
+  .hero::after  { content:''; position:absolute; top:-80px; right:-120px; width:480px; height:480px; border-radius:50%; background:rgba(255,255,255,0.06); pointer-events:none; }
+  .hero::before { content:''; position:absolute; bottom:-60px; left:30%; width:260px; height:260px; border-radius:50%; background:rgba(255,255,255,0.03); pointer-events:none; }
+  .hero-inner { position:relative; z-index:1; max-width:720px; }
+  .hero-tag { font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--teal-lt); margin-bottom:16px; display:block; }
+  .hero h1 { font-family:'Inter',sans-serif; font-size:clamp(30px,4vw,52px); font-weight:700; color:#fff; line-height:1.1; margin-bottom:16px; }
+  .hl { position:relative; display:inline-block; }
+  .hl svg { position:absolute; bottom:-5px; left:0; width:100%; height:9px; }
+  .hero-sub { font-size:15px; color:rgba(255,255,255,0.62); line-height:1.75; margin-bottom:40px; max-width:580px; }
+  .hero-stats { display:flex; flex-wrap:wrap; gap:0; }
+  .stat { padding-right:28px; margin-right:28px; border-right:1px solid rgba(255,255,255,0.15); }
+  .stat:last-child { border-right:none; }
+  .stat-n { font-family:'Caveat',cursive; font-size:32px; font-weight:700; color:#fff; line-height:1; display:block; }
+  .stat-l { font-size:11px; color:rgba(255,255,255,0.48); letter-spacing:.5px; margin-top:3px; }
+
+  /* MAIN */
+  .wrap { max-width:1100px; margin:0 auto; padding:48px 40px; }
+
+  /* FEEL-FELT-FOUND */
+  .fff-section { margin-bottom:48px; }
+  .sh-eye { font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--teal); margin-bottom:8px; }
+  .sh-title { font-family:'Caveat',cursive; font-size:clamp(28px,3vw,40px); font-weight:700; color:var(--text); display:inline-block; position:relative; margin-bottom:4px; }
+  .sh-title::after { content:''; display:block; height:5px; margin-top:3px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 8'%3E%3Cpath d='M2,5 C60,1 120,7 180,4 C230,1 270,7 298,4' stroke='%23F06B7A' stroke-width='3.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") left/100% 100% no-repeat; }
+  .sh-lead { font-size:15px; color:var(--muted); max-width:640px; line-height:1.75; margin-top:10px; margin-bottom:28px; }
+
+  .fff-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+  @media(max-width:700px){.fff-grid{grid-template-columns:1fr;}}
+  .fff-card { border-radius:18px; padding:28px 22px; text-align:center; transition:transform .2s; }
+  .fff-card:hover { transform:translateY(-3px); }
+  .fff-feel  { background:rgba(113,75,103,0.08); }
+  .fff-felt  { background:rgba(1,126,132,0.08); }
+  .fff-found { background:rgba(26,188,156,0.08); }
+  .fff-num { font-family:'Caveat',cursive; font-size:44px; font-weight:700; line-height:1; margin-bottom:6px; }
+  .fff-feel  .fff-num { color:var(--purple); }
+  .fff-felt  .fff-num { color:var(--teal); }
+  .fff-found .fff-num { color:var(--teal-lt); }
+  .fff-word { font-family:'Caveat',cursive; font-size:22px; font-weight:700; color:var(--text); margin-bottom:10px; }
+  .fff-desc { font-size:13.5px; color:var(--muted); line-height:1.7; }
+
+  .callout { background:#fff; border-radius:18px; padding:24px 28px; border-left:5px solid var(--teal); margin-bottom:32px; box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+  .callout-l { font-family:'Caveat',cursive; font-size:15px; font-weight:700; color:var(--teal); margin-bottom:8px; }
+  .callout p { font-size:14px; line-height:1.85; color:var(--muted); }
+  .callout strong { color:var(--text); }
+
+  /* SEARCH + FILTER */
+  .controls { background:#fff; border-radius:18px; padding:20px 24px; margin-bottom:28px; box-shadow:0 2px 10px rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.04); }
+  .search-row { display:flex; gap:12px; margin-bottom:16px; }
+  .search-box { flex:1; padding:10px 16px 10px 40px; border:1.5px solid var(--border); border-radius:12px; font-family:'Inter',sans-serif; font-size:14px; color:var(--text); background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Ccircle cx='8.5' cy='8.5' r='5' stroke='%236b5a70' stroke-width='1.5'/%3E%3Cpath d='M13 13l2.5 2.5' stroke='%236b5a70' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") 12px center/18px no-repeat; outline:none; transition:border-color .2s; }
+  .search-box:focus { border-color:var(--purple); }
+  .count-badge { background:var(--purple); color:#fff; padding:10px 18px; border-radius:12px; font-size:13px; font-weight:600; white-space:nowrap; display:flex; align-items:center; }
+  .filter-row { display:flex; flex-wrap:wrap; gap:8px; }
+  .filter-btn { padding:7px 14px; border-radius:20px; border:1.5px solid var(--border); background:transparent; font-family:'Inter',sans-serif; font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; transition:all .2s; white-space:nowrap; }
+  .filter-btn:hover { border-color:var(--purple); color:var(--purple); }
+  .filter-btn.active { background:var(--purple); border-color:var(--purple); color:#fff; }
+
+  /* CATEGORY LABEL */
+  .cat-header { display:flex; align-items:center; gap:12px; margin:32px 0 16px; }
+  .cat-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .cat-name { font-family:'Caveat',cursive; font-size:22px; font-weight:700; color:var(--text); }
+  .cat-count { font-size:12px; font-weight:600; color:var(--muted); background:rgba(0,0,0,0.06); padding:3px 10px; border-radius:20px; }
+  .cat-line { flex:1; height:1px; background:var(--border); }
+
+  /* OBJECTION CARDS */
+  .obj-list { display:flex; flex-direction:column; gap:10px; margin-bottom:8px; }
+  .obj-card { background:#fff; border-radius:16px; border:1px solid rgba(0,0,0,0.05); overflow:hidden; box-shadow:0 1px 8px rgba(0,0,0,0.04); transition:box-shadow .2s; }
+  .obj-card:hover { box-shadow:0 4px 20px rgba(113,75,103,0.1); }
+  .obj-card.hidden { display:none; }
+  .obj-header { display:flex; align-items:center; gap:14px; padding:18px 22px; cursor:pointer; transition:background .15s; }
+  .obj-header:hover { background:#faf7f9; }
+  .obj-q-icon { font-size:18px; flex-shrink:0; }
+  .obj-q-text { font-size:14px; font-weight:600; color:var(--text); flex:1; font-style:italic; }
+  .obj-toggle { font-size:20px; color:var(--purple); transition:transform .3s; flex-shrink:0; font-weight:300; }
+  .obj-card.open .obj-toggle { transform:rotate(45deg); }
+  .obj-body { display:none; padding:0 22px 22px; border-top:1px solid rgba(0,0,0,0.05); }
+  .obj-card.open .obj-body { display:block; }
+  .obj-section-label { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-top:16px; margin-bottom:6px; }
+  .concern-label { color:var(--coral); }
+  .rebuttal-label { color:var(--teal); }
+  .obj-concern { font-size:13.5px; color:var(--muted); line-height:1.7; background:rgba(240,107,122,0.06); border-radius:10px; padding:12px 14px; }
+  .obj-rebuttal { font-size:14px; color:var(--muted); line-height:1.8; background:rgba(1,126,132,0.05); border-radius:10px; padding:14px 16px; }
+  .copy-btn { margin-top:12px; padding:8px 16px; background:var(--purple); color:#fff; border:none; border-radius:10px; font-family:'Inter',sans-serif; font-size:12px; font-weight:600; cursor:pointer; transition:background .2s; display:flex; align-items:center; gap:6px; }
+  .copy-btn:hover { background:var(--purple-dk); }
+  .copy-btn.copied { background:var(--teal-lt); }
+
+  /* NO RESULTS */
+  .no-results { text-align:center; padding:48px 24px; display:none; }
+  .no-results-icon { font-size:40px; margin-bottom:12px; }
+  .no-results-text { font-size:15px; color:var(--muted); }
+
+  /* FOOTER */
+  .footer { background:var(--purple); text-align:center; padding:32px; margin-top:48px; }
+  .footer-logo { height:20px; opacity:.45; display:block; margin:0 auto 10px; }
+  .footer-text { font-size:12px; color:rgba(255,255,255,.32); }
+
+  @media(max-width:768px){ .topbar{padding:12px 20px;} .hero{padding:40px 24px 48px;} .wrap{padding:32px 20px;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <img src="https://odoocdn.com/openerp_website/static/src/img/assets/png/odoo_logo_inverted.png" alt="Odoo" class="topbar-logo">
+  <span class="topbar-div"></span>
+  <span class="topbar-lbl">Sales Enablement · Implementation Objections</span>
+</div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <span class="hero-tag">Sales Enablement · Field Reference</span>
+    <h1>Common Implementation <span class="hl">Objections<svg viewBox="0 0 260 10" preserveAspectRatio="none"><path d="M2,7 C50,2 120,9 170,5 C205,2 235,8 258,5" stroke="#1ABC9C" stroke-width="4" fill="none" stroke-linecap="round"/></svg></span></h1>
+    <p class="hero-sub">By understanding the root causes of these objections and mastering proven rebuttal strategies, you can confidently guide clients toward a successful implementation.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-n">16</span><div class="stat-l">Total Objections</div></div>
+      <div class="stat"><span class="stat-n">7</span><div class="stat-l">Categories</div></div>
+      <div class="stat"><span class="stat-n">3</span><div class="stat-l">Feel-Felt-Found Steps</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- FEEL FELT FOUND -->
+  <div class="fff-section">
+    <div class="sh-eye">Core Framework</div>
+    <div class="sh-title">The Feel-Felt-Found Method</div>
+    <p class="sh-lead">A powerful approach to addressing any objection by building trust, providing social proof, and highlighting positive outcomes. Use this structure as the backbone of every rebuttal.</p>
+
+    <div class="fff-grid">
+      <div class="fff-card fff-feel">
+        <div class="fff-num">1</div>
+        <div class="fff-word">Feel</div>
+        <p class="fff-desc">Acknowledge the customer's concern and demonstrate genuine empathy. Validate that their worry is reasonable and that you take it seriously.</p>
+      </div>
+      <div class="fff-card fff-felt">
+        <div class="fff-num">2</div>
+        <div class="fff-word">Felt</div>
+        <p class="fff-desc">Share that other clients — especially those in similar situations — have felt exactly the same way. Normalize the concern so they don't feel alone in having it.</p>
+      </div>
+      <div class="fff-card fff-found">
+        <div class="fff-num">3</div>
+        <div class="fff-word">Found</div>
+        <p class="fff-desc">Explain what those customers ultimately discovered: the concern resolved, the outcome was positive, and the decision to move forward was the right one.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-l">Example in Practice</div>
+      <p>
+        <strong>Customer:</strong> "I'm worried the implementation will disrupt our business."<br><br>
+        <strong>Feel:</strong> "I completely understand how you feel. Implementing a new system can seem overwhelming at first, especially when you're running a busy operation."<br><br>
+        <strong>Felt:</strong> "Many of our clients initially felt the same way — especially those with complex operations like yours."<br><br>
+        <strong>Found:</strong> "What they found, however, was that our phased implementation process allowed them to stay fully operational while transitioning to Odoo gradually. They were often surprised by how smooth the process actually turned out to be."
+      </p>
+    </div>
+  </div>
+
+  <!-- SEARCH + FILTER -->
+  <div class="sh-eye">Objection Library</div>
+  <div class="sh-title">Common Objections & Rebuttals</div>
+  <p style="font-size:15px;color:var(--muted);line-height:1.75;margin-top:10px;margin-bottom:24px;">Use the search or category filters to quickly find the right rebuttal. Click any objection to expand the concern and rebuttal. Use the copy button to grab the rebuttal text instantly.</p>
+
+  <div class="controls">
+    <div class="search-row">
+      <input type="text" class="search-box" id="searchInput" placeholder="Search objections..." oninput="filterAll()">
+      <div class="count-badge" id="countBadge">16 objections</div>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="filterCat('all',this)">All</button>
+      <button class="filter-btn" onclick="filterCat('cost',this)">💵 Cost</button>
+      <button class="filter-btn" onclick="filterCat('timeline',this)">⏱️ Timeline</button>
+      <button class="filter-btn" onclick="filterCat('product',this)">📦 Product</button>
+      <button class="filter-btn" onclick="filterCat('support',this)">🛠️ Support</button>
+      <button class="filter-btn" onclick="filterCat('competition',this)">🏆 Competition</button>
+      <button class="filter-btn" onclick="filterCat('longterm',this)">📈 Long-Term</button>
+      <button class="filter-btn" onclick="filterCat('change',this)">🔄 Change</button>
+    </div>
+  </div>
+
+  <div id="noResults" class="no-results">
+    <div class="no-results-icon">🔍</div>
+    <div class="no-results-text">No objections match your search. Try different keywords.</div>
+  </div>
+
+  <!-- COST -->
+  <div class="cat-header" data-cat="cost">
+    <div class="cat-icon" style="background:rgba(245,166,35,0.1);">💵</div>
+    <div class="cat-name">Cost-Related Objections</div>
+    <div class="cat-count" id="count-cost">7</div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="obj-list">
+
+    <div class="obj-card" data-cat="cost" data-text="implementation is too expensive budget constraints roi">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"The implementation is too expensive."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Budget constraints or perceived value of implementation services relative to their cost.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r1">Focus on the long-term return on investment (ROI) and cost savings that the implementation will provide. Odoo's subscription is approximately 7× lower than competitors' public prices — the implementation investment is often recovered within the first year through operational efficiency gains alone. Frame the cost as an investment with a measurable return, not an expense.</div>
+        <button class="copy-btn" onclick="copyText('r1',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="cost" data-text="can't justify cost business size roi scalability">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"We can't justify the cost for a business of our size."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Doubt that the implementation will provide sufficient ROI for a company at their current scale.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r2">Highlight the scalability of the solution and how implementation can be scoped and phased to match the business's size and budget. Encourage starting with just the essential 2–3 apps that solve their biggest pain points. It's easier to grow into the platform than to implement everything at once — and significantly less risky.</div>
+        <button class="copy-btn" onclick="copyText('r2',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="cost" data-text="pay whole implementation before go live upfront costs trust">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"Why do we have to pay for the whole implementation before we go live?"</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Lack of trust or concern about paying upfront without seeing the full value delivered.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r3">Explain the upfront costs associated with project planning, resource allocation, and BSA assignment. Work begins immediately upon payment — not at Go-Live. Hours are consumed throughout the entire project lifecycle, from analysis through post-Go-Live support. The structure protects both sides by ensuring the BSA's time is committed and available for the project.</div>
+        <button class="copy-btn" onclick="copyText('r3',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="cost" data-text="trust schedule budget delays cost overruns hidden costs scope creep">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"How can we trust that the implementation will stay on schedule and budget?"</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Worry about unforeseen delays, cost overruns, and fear of hidden costs or scope creep during the implementation process.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r4">Provide examples of past successful projects and emphasize Odoo's commitment to transparent communication and project management. Our 95%+ implementation success rate exists specifically because of the QuickStart methodology — phased delivery, a single BSA driving the project, and proactive scope management built into every step. We define clear deliverables upfront and surface issues early, not at Go-Live.</div>
+        <button class="copy-btn" onclick="copyText('r4',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="cost" data-text="pay user licenses during implementation training testing">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"Why do we pay for user licenses during implementation?"</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Concern about incurring costs for licenses before the system is fully in use.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r5">User licenses are necessary for training and testing during the implementation phase. Users need live access to the system to be properly prepared for Go-Live — you can't train on a placeholder. Access during implementation ensures users are confident and ready on the day the system goes live, which directly reduces Go-Live issues and accelerates adoption.</div>
+        <button class="copy-btn" onclick="copyText('r5',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="cost" data-text="lead time 3 weeks pay before assigned BSA queue">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"You said the lead time is 3 weeks. Why do we pay before we get assigned to our BSA?"</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Concern about incurring costs during the lead time before active implementation begins.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r6">Clarify that the lead time refers to when active BSA-led work begins — but project planning and resource allocation start immediately upon payment. Payment initiates the queue for BSA assignment and ensures your project is formally scheduled. This is standard practice and protects the customer by securing a dedicated BSA for their project.</div>
+        <button class="copy-btn" onclick="copyText('r6',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="cost" data-text="refunds unused hours billing fairness">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"We expect to get refunds for hours we do not use."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Concern about paying for unused services and not receiving fair value for the investment.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r7">All sales are final — there are no refunds, including timesheets. Explain how hours are allocated across the full project lifecycle: analysis, configuration, training, Go-Live support, and post-production. Having remaining hours after Go-Live is actually a benefit — they are available for the Second Deployment phase, additional training, or ongoing coaching. Unused hours are never truly wasted.</div>
+        <button class="copy-btn" onclick="copyText('r7',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="cat-header" data-cat="timeline">
+    <div class="cat-icon" style="background:rgba(41,171,226,0.1);">⏱️</div>
+    <div class="cat-name">Timeline & Resource Objections</div>
+    <div class="cat-count" id="count-timeline">3</div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="obj-list">
+
+    <div class="obj-card" data-cat="timeline" data-text="too long disrupt operations downtime phased">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"The implementation will take too long and disrupt our operations."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Fear of prolonged downtime or resource strain during the transition to a new system.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r8">Emphasize the phased implementation approach: users continue in their current system while Odoo is configured alongside it. There is no "big bang" cutover. Each phase delivers working functionality in short cycles, minimizing disruption to daily operations. The business stays fully operational throughout the entire implementation.</div>
+        <button class="copy-btn" onclick="copyText('r8',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="timeline" data-text="don't have internal resources team expertise manage project">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"We don't have the internal resources to manage this project."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Lack of a dedicated team or internal expertise to support the transition alongside daily responsibilities.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r9">The BSA drives the entire implementation — the customer doesn't need a project management team. What they need is a committed SPoC who can act as the internal point of contact and champion. The BSA provides the planning, guidance, configuration, and training. The SPoC provides the business knowledge and internal authority. This is by design — we built the methodology specifically around companies that don't have dedicated IT departments.</div>
+        <button class="copy-btn" onclick="copyText('r9',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="timeline" data-text="seasonal business peak periods downtime risk timing">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"Our business is seasonal and we can't risk downtime during peak periods."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Concern about the timing of the implementation conflicting with peak business periods.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r10">The phased approach makes scheduling flexible. Work with the customer to map out their seasonal calendar and plan Go-Live dates around peak periods. Configuration and training can happen during slower periods; Go-Live can be timed precisely to avoid disruption. This is a planning conversation, not a blocker — and it's one we have with customers regularly.</div>
+        <button class="copy-btn" onclick="copyText('r10',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PRODUCT -->
+  <div class="cat-header" data-cat="product">
+    <div class="cat-icon" style="background:rgba(1,126,132,0.1);">📦</div>
+    <div class="cat-name">Product & Process Objections</div>
+    <div class="cat-count" id="count-product">3</div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="obj-list">
+
+    <div class="obj-card" data-cat="product" data-text="integrate another software stack integration connector">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"What if we need to integrate with another software?"</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Fear that their current software stack won't work well with Odoo.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r11">Discuss Odoo's native integration capabilities and available connectors. Note: Odoo does not build integrations for features already available natively in Odoo. For eCommerce, Shopify, WooCommerce, and Magento connectors are supported. For other integrations, explore whether the functionality already exists in Odoo before committing to custom connector development — most of the time, it does.</div>
+        <button class="copy-btn" onclick="copyText('r11',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="product" data-text="bad experience ERP implementation past failed mistrust previous">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"We've had a bad experience with ERP implementation in the past."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Lingering mistrust from previous failed ERP implementations or painful transitions.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r12">Acknowledge their past experience directly and without dismissing it — bad ERP implementations are common, and their concern is valid. More than 50% of proprietary ERP implementations fail industry-wide. Then differentiate: Odoo's 95%+ success rate exists precisely because of the QuickStart methodology, which was developed to address the exact failures that plague traditional ERP projects. The phased approach, the single BSA model, and the commitment to staying standard are all direct responses to why ERP projects typically fail.</div>
+        <button class="copy-btn" onclick="copyText('r12',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="product" data-text="industry specific requirements niche development flexibility">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"We're not sure Odoo can handle our industry-specific requirements, especially if we need developments."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Doubt that Odoo is equipped to address unique or niche business processes, and concern with Odoo's development process.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r13">Showcase the flexibility and customization options of the solution and provide examples of successful implementations in their industry. The key distinction: there is a difference between customization (configuring Odoo's existing features to fit the business — unlimited) and custom development (building new functionality — used strategically). Most industry-specific needs can be addressed through smart configuration without touching code.</div>
+        <button class="copy-btn" onclick="copyText('r13',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SUPPORT -->
+  <div class="cat-header" data-cat="support">
+    <div class="cat-icon" style="background:rgba(113,75,103,0.1);">🛠️</div>
+    <div class="cat-name">Support & Customization Objections</div>
+    <div class="cat-count" id="count-support">3</div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="obj-list">
+
+    <div class="obj-card" data-cat="support" data-text="more customization than odoo can handle flexibility modules">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"What if we need more customization than Odoo can handle?"</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Doubt about Odoo's flexibility and adaptability to unique business needs.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r14">Emphasize the platform's flexibility and customization options. The key distinction is between customization (configuring Odoo's existing tools — configuration, Studio, workflows) and custom development (writing new code). The former is unlimited. The latter is available when genuinely necessary. Most business needs that feel unique can be addressed through smart configuration, saving time, cost, and future maintenance overhead.</div>
+        <button class="copy-btn" onclick="copyText('r14',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="support" data-text="post implementation support keep paying hours after go live">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"What if we need post-implementation support? Do we have to keep paying for hours?"</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Concern about being left without adequate help once the system is live.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r15">Odoo provides multiple layers of post-Go-Live support. Functional support (generic questions, bug reports) is available 24/5 by phone and email — free. For ongoing BSA involvement — expansion phases, additional training, new module implementation — additional success pack hours can be purchased at any time. Any unused hours from the original pack are also available for post-Go-Live use. You're never left on your own.</div>
+        <button class="copy-btn" onclick="copyText('r15',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="support" data-text="BSA expert industry specialized knowledge vertical">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"We want a BSA who is an expert in our industry."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Desire for specialized industry knowledge to ensure the solution aligns with their specific business processes.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r16a">Discuss Odoo's industry-agnostic approach and highlight that all BSAs have experience assessing industry-specific requirements and tailoring the system accordingly. Odoo's implementation team carries synthesized best practices from thousands of successful projects across every major industry — this collective knowledge is often more valuable than individual vertical experience. App Experts with deep functional knowledge are also available to peer-review critical decisions on any project.</div>
+        <button class="copy-btn" onclick="copyText('r16a',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COMPETITION -->
+  <div class="cat-header" data-cat="competition">
+    <div class="cat-icon" style="background:rgba(26,188,156,0.1);">🏆</div>
+    <div class="cat-name">Market Competition & Alternatives</div>
+    <div class="cat-count" id="count-competition">2</div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="obj-list">
+
+    <div class="obj-card" data-cat="competition" data-text="third party partner vs internal odoo direct implementation">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"Why should we go with internal Odoo implementation and not a 3rd party?"</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Doubt about whether direct Odoo implementation provides more value than working with an external partner.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r17">Working directly with Odoo provides a dedicated BSA for the project's full duration, direct access to the QuickStart methodology developed by Odoo itself, streamlined escalation paths, and a team whose sole focus is long-term customer success on the platform. Partners serve a vital purpose for specific use cases — but they are not necessary for this project's success. For standard implementations, working directly with Odoo is faster, more accountable, and more consistent.</div>
+        <button class="copy-btn" onclick="copyText('r17',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="competition" data-text="standard business don't need implementation do it ourselves self">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"Our business is pretty standard. I don't think we need implementation. We'll do it ourselves."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Underestimation of implementation complexity and the expertise required for optimal configuration and user adoption.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r18">Self-implementations often start well and stall. The complexity isn't in the software — Odoo is genuinely easy to use. The complexity is in mapping business processes to the right Odoo features, managing change across the organization, migrating data cleanly, and ensuring users actually adopt the system. These are the areas where expert guidance delivers the most value and where self-implementations most commonly get stuck — often months in, after significant time has already been lost.</div>
+        <button class="copy-btn" onclick="copyText('r18',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LONG TERM -->
+  <div class="cat-header" data-cat="longterm">
+    <div class="cat-icon" style="background:rgba(245,166,35,0.1);">📈</div>
+    <div class="cat-name">Long-Term Viability</div>
+    <div class="cat-count" id="count-longterm">3</div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="obj-list">
+
+    <div class="obj-card" data-cat="longterm" data-text="stop supporting version updates upgrades future">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"What if Odoo stops supporting our version in a few years?"</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Concern about long-term support and the future availability of system updates.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r19">Discuss Odoo's commitment to long-term support and version updates, and outline the upgrade process when newer versions become available. Reinforce Odoo's market position: consistent growth, a massive and growing user base, and strong VC investment all signal a company with a secure long-term future. Odoo has been on an annual release cadence for over a decade — there is no indication of that changing.</div>
+        <button class="copy-btn" onclick="copyText('r19',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="longterm" data-text="data security breach encryption access controls audits">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"How do we ensure our data will remain secure?"</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Fear of security breaches or data mishandling.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r20">Describe the security measures and protocols in place: data encryption, role-based access controls, and regular security audits. Odoo's cloud infrastructure complies with international security standards. For customers requiring specific compliance, hosting options (SaaS, Odoo.SH) can be evaluated against their requirements. The platform is trusted by millions of users globally — security is not an afterthought, it's a core infrastructure investment.</div>
+        <button class="copy-btn" onclick="copyText('r20',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="longterm" data-text="business outgrows system scalability grow adapt future needs">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"What happens if our business outgrows the system?"</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Concern about whether Odoo can scale with the business as it grows.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r21">Emphasize the scalability of the solution. Odoo serves businesses from 5 to 50,000+ users on the same core platform. New apps can be added at any time. The modular architecture means the customer starts with what they need now and expands into what they need later — without migrating to a new platform, rebuilding from scratch, or facing a painful re-implementation.</div>
+        <button class="copy-btn" onclick="copyText('r21',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CHANGE MANAGEMENT -->
+  <div class="cat-header" data-cat="change">
+    <div class="cat-icon" style="background:rgba(240,107,122,0.1);">🔄</div>
+    <div class="cat-name">Change Management</div>
+    <div class="cat-count" id="count-change">2</div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="obj-list">
+
+    <div class="obj-card" data-cat="change" data-text="team not ready change staff won't adopt resist pushback">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"Our team isn't ready for such a big change. We're worried our staff won't adopt the new system."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Resistance to change due to fear of the unknown or internal pushback and concerns about employee buy-in.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r22">Change management is a core part of Odoo's implementation methodology — not an afterthought. The phased approach, the SPoC champion model, the executive sponsor role, and hands-on training are all specifically designed to drive adoption. Users who are involved early, trained on features that directly help them, and supported by their own internal champion adopt the system far more successfully than those subjected to a one-time launch event.</div>
+        <button class="copy-btn" onclick="copyText('r22',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+    <div class="obj-card" data-cat="change" data-text="odoo too complex team learning curve staff use effectively training">
+      <div class="obj-header" onclick="toggleObj(this)">
+        <span class="obj-q-icon">💬</span>
+        <span class="obj-q-text">"Odoo is too complex for our team to use effectively."</span>
+        <span class="obj-toggle">+</span>
+      </div>
+      <div class="obj-body">
+        <div class="obj-section-label concern-label">Root Concern</div>
+        <div class="obj-concern">Concerns about the learning curve and whether staff will be able to use the system effectively day-to-day.</div>
+        <div class="obj-section-label rebuttal-label">Rebuttal</div>
+        <div class="obj-rebuttal" id="r23">Highlight the user-friendly interface and the availability of training and support to facilitate user adoption. Odoo is significantly simpler than traditional ERPs — this is one of its core design principles. The interface is consumer-grade in its clarity. More than 18% of SMEs have never deployed integrated management software because traditional ERPs are "too complex and too expensive." Odoo was built to solve that exact problem. The BSA's role is to configure the system to match how the team actually works.</div>
+        <button class="copy-btn" onclick="copyText('r23',this)">📋 Copy Rebuttal</button>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /.wrap -->
+
+<div class="footer">
+  <img src="https://odoocdn.com/openerp_website/static/src/img/assets/png/odoo_logo_inverted.png" alt="Odoo" class="footer-logo">
+  <div class="footer-text">Common Implementation Objections · Odoo Sales Enablement</div>
+</div>
+
+<script>
+  let activeCategory = 'all';
+
+  function toggleObj(header) {
+    const card = header.parentElement;
+    const isOpen = card.classList.contains('open');
+    document.querySelectorAll('.obj-card.open').forEach(c => c.classList.remove('open'));
+    if (!isOpen) card.classList.add('open');
+  }
+
+  function filterCat(cat, btn) {
+    activeCategory = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterAll();
+  }
+
+  function filterAll() {
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    const cards = document.querySelectorAll('.obj-card');
+    const headers = document.querySelectorAll('.cat-header');
+    let visible = 0;
+
+    cards.forEach(card => {
+      const catMatch = activeCategory === 'all' || card.dataset.cat === activeCategory;
+      const textMatch = query === '' || card.dataset.text.includes(query) || card.querySelector('.obj-q-text').textContent.toLowerCase().includes(query);
+      const show = catMatch && textMatch;
+      card.classList.toggle('hidden', !show);
+      if (show) visible++;
+    });
+
+    document.getElementById('countBadge').textContent = visible + (visible === 1 ? ' objection' : ' objections');
+    document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+
+    // Show/hide category headers
+    headers.forEach(header => {
+      const cat = header.dataset.cat;
+      if (activeCategory !== 'all' && cat !== activeCategory) {
+        header.style.display = 'none';
+      } else {
+        const catCards = document.querySelectorAll(`.obj-card[data-cat="${cat}"]:not(.hidden)`);
+        header.style.display = catCards.length === 0 ? 'none' : 'flex';
+      }
+    });
+  }
+
+  function copyText(id, btn) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📋 Copy Rebuttal';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>

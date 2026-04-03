@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odoo Implementation Playbook</title>
+<link rel="icon" href="https://www.odoo.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple:  #714B67;
+    --purple-dk:#5a3a52;
+    --teal:    #017E84;
+    --teal-lt: #1ABC9C;
+    --blue:    #29ABE2;
+    --yellow:  #F5A623;
+    --coral:   #F06B7A;
+    --gray-bg: #F4F4F4;
+    --white:   #ffffff;
+    --text:    #2d2235;
+    --muted:   #6b5a70;
+    --border:  rgba(113,75,103,0.1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--gray-bg); color:var(--text); }
+
+  /* ── TOP BAR ── */
+  .topbar { background:var(--purple); padding:14px 48px; display:flex; align-items:center; gap:18px; position:sticky; top:0; z-index:200; box-shadow:0 2px 16px rgba(113,75,103,0.3); }
+  .topbar-logo { height:26px; }
+  .topbar-div  { width:1px; height:22px; background:rgba(255,255,255,0.3); }
+  .topbar-lbl  { font-size:13px; font-weight:500; color:rgba(255,255,255,0.7); letter-spacing:.4px; }
+
+  /* ── NAV ── */
+  .nav-wrap { background:#fff; border-bottom:1px solid var(--border); box-shadow:0 1px 8px rgba(0,0,0,0.05); }
+  .nav { display:flex; overflow-x:auto; scrollbar-width:none; max-width:1300px; margin:0 auto; }
+  .nav::-webkit-scrollbar { display:none; }
+  .nav-btn { font-family:'Inter',sans-serif; font-size:11.5px; font-weight:600; letter-spacing:.3px; padding:16px 20px; border:none; background:transparent; color:var(--muted); cursor:pointer; white-space:nowrap; border-bottom:3px solid transparent; transition:all .2s; }
+  .nav-btn:hover { color:var(--purple); }
+  .nav-btn.active { color:var(--purple); border-bottom-color:var(--purple); }
+
+  /* ── HERO ── */
+  .hero { background:var(--purple); padding:56px 60px 68px; position:relative; overflow:hidden; }
+  .hero::after { content:''; position:absolute; top:-100px; right:-140px; width:560px; height:560px; border-radius:50%; background:rgba(255,255,255,0.06); pointer-events:none; }
+  .hero::before { content:''; position:absolute; bottom:-60px; left:40%; width:300px; height:300px; border-radius:50%; background:rgba(255,255,255,0.03); pointer-events:none; }
+  .hero-inner { position:relative; z-index:1; max-width:740px; }
+  .hero h1 { font-family:'Inter',sans-serif; font-size:clamp(34px,4.5vw,58px); font-weight:700; color:#fff; line-height:1.08; margin-bottom:18px; }
+  .hl { position:relative; display:inline-block; }
+  .hl svg { position:absolute; bottom:-6px; left:0; width:100%; height:10px; }
+  .hero-sub { font-size:16px; color:rgba(255,255,255,0.62); line-height:1.75; margin-bottom:44px; max-width:620px; }
+  .stats { display:flex; flex-wrap:wrap; gap:0; }
+  .stat { padding-right:32px; margin-right:32px; border-right:1px solid rgba(255,255,255,0.15); }
+  .stat:last-child { border-right:none; }
+  .stat-n { font-family:'Caveat',cursive; font-size:36px; font-weight:700; color:#fff; line-height:1; display:block; }
+  .stat-l { font-size:11px; color:rgba(255,255,255,0.48); letter-spacing:.5px; margin-top:3px; }
+
+  /* ── SECTIONS ── */
+  .main { background:var(--gray-bg); min-height:80vh; }
+  .section { display:none; max-width:1200px; margin:0 auto; padding:56px 48px; animation:up .35s ease; }
+  .section.active { display:block; }
+  @keyframes up { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── SECTION HEADER ── */
+  .sh { margin-bottom:44px; }
+  .sh-eye { font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--teal); margin-bottom:10px; }
+  .sh-title { font-family:'Caveat',cursive; font-size:clamp(32px,3.5vw,48px); font-weight:700; color:var(--text); display:inline-block; position:relative; margin-bottom:4px; }
+  .sh-title::after { content:''; display:block; height:5px; margin-top:3px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 8'%3E%3Cpath d='M2,5 C60,1 120,7 180,4 C230,1 270,7 298,4' stroke='%23F06B7A' stroke-width='3.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") left/100% 100% no-repeat; }
+  .sh-lead { font-size:16px; color:var(--muted); max-width:680px; line-height:1.75; margin-top:12px; }
+
+  /* ── CARDS ── */
+  .card { background:#fff; border-radius:20px; padding:28px 30px; border:1px solid rgba(0,0,0,0.05); box-shadow:0 2px 12px rgba(0,0,0,0.04); transition:transform .2s, box-shadow .2s; }
+  .card:hover { transform:translateY(-3px); box-shadow:0 8px 28px rgba(113,75,103,0.1); }
+  .card-t { font-family:'Caveat',cursive; font-size:20px; font-weight:700; color:var(--text); margin-bottom:10px; }
+  .card-b { font-size:14px; line-height:1.75; color:var(--muted); }
+  .c-blue  { border-left:4px solid var(--blue); }
+  .c-teal  { border-left:4px solid var(--teal-lt); }
+  .c-coral { border-left:4px solid var(--coral); }
+  .c-gold  { border-left:4px solid var(--yellow); }
+  .c-purple { border-left:4px solid var(--purple); }
+
+  .g2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:20px; }
+  .g3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
+  .g4 { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+
+  /* ── PRINCIPLE CARDS ── */
+  .pc { background:#fff; border-radius:20px; padding:32px 28px; position:relative; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.04); }
+  .pc::before { content:''; position:absolute; top:-40px; right:-40px; width:120px; height:120px; border-radius:50%; background:var(--bc,rgba(113,75,103,0.05)); }
+  .pc-n { font-family:'Caveat',cursive; font-size:52px; font-weight:700; color:var(--nc,rgba(113,75,103,0.1)); line-height:1; margin-bottom:12px; }
+  .pc-t { font-family:'Caveat',cursive; font-size:22px; font-weight:700; color:var(--text); margin-bottom:10px; }
+  .pc-b { font-size:14px; line-height:1.75; color:var(--muted); }
+
+  /* ── CALLOUT ── */
+  .callout { background:#fff; border-radius:20px; padding:28px 32px; border-left:5px solid var(--teal); margin:28px 0; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
+  .callout-l { font-family:'Caveat',cursive; font-size:16px; font-weight:700; color:var(--teal); margin-bottom:8px; }
+  .callout p { font-size:15px; line-height:1.8; color:var(--muted); }
+
+  /* ── ALERT ── */
+  .alert { border-radius:14px; padding:16px 20px; margin:16px 0; display:flex; gap:12px; align-items:flex-start; }
+  .alert.yellow { background:#FFF8E7; border-left:4px solid var(--yellow); }
+  .alert.blue   { background:#EBF7FD; border-left:4px solid var(--blue); }
+  .alert.coral  { background:#FEF0F1; border-left:4px solid var(--coral); }
+  .alert.teal   { background:#E8F7F5; border-left:4px solid var(--teal-lt); }
+  .alert.purple { background:#F3EEF2; border-left:4px solid var(--purple); }
+  .alert-i { font-size:18px; flex-shrink:0; margin-top:1px; }
+  .alert-t { font-size:13.5px; line-height:1.7; }
+  .alert.yellow .alert-t { color:#7a5c10; }
+  .alert.blue   .alert-t { color:#1a5f7a; }
+  .alert.coral  .alert-t { color:#8a2a35; }
+  .alert.teal   .alert-t { color:#0a5a52; }
+  .alert.purple .alert-t { color:var(--purple-dk); }
+
+  /* ── STORY ── */
+  .story { background:var(--purple); border-radius:20px; padding:36px; position:relative; overflow:hidden; margin:32px 0; }
+  .story::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,0.06); }
+  .story::after  { content:''; position:absolute; bottom:-40px; left:-40px; width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,0.04); }
+  .si { position:relative; z-index:1; }
+  .sq { font-family:'Caveat',cursive; font-size:64px; font-weight:700; color:var(--teal-lt); line-height:.7; display:block; margin-bottom:12px; }
+  .st { font-size:15px; line-height:1.85; color:rgba(255,255,255,.84); font-style:italic; margin-bottom:18px; }
+  .sa { font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--yellow); }
+
+  /* ── PHASE TIMELINE ── */
+  .phases { display:flex; flex-direction:column; gap:4px; }
+  .pi { display:grid; grid-template-columns:90px 28px 1fr; align-items:start; }
+  .pp { text-align:right; padding-top:26px; padding-right:14px; }
+  .pp-n { font-family:'Caveat',cursive; font-size:30px; font-weight:700; color:var(--purple); display:block; line-height:1; }
+  .pp-l { font-size:10px; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; }
+  .ps { display:flex; flex-direction:column; align-items:center; padding-top:30px; }
+  .pd { width:14px; height:14px; border-radius:50%; background:var(--purple); border:3px solid #fff; box-shadow:0 0 0 3px var(--purple); flex-shrink:0; }
+  .pl { width:2px; flex:1; min-height:50px; background:linear-gradient(to bottom,var(--purple),rgba(113,75,103,0.1)); margin-top:4px; }
+  .pc2 { background:#fff; border-radius:20px; padding:24px 28px; margin-left:16px; margin-bottom:8px; border:1px solid rgba(0,0,0,0.04); box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+  .pn { font-family:'Caveat',cursive; font-size:22px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .pg { font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--teal); margin-bottom:12px; }
+  .pb { font-size:14px; line-height:1.75; color:var(--muted); margin-bottom:14px; }
+
+  /* ── TIPS ── */
+  .tips { list-style:none; padding:0; }
+  .tips li { font-size:13.5px; color:var(--muted); padding:5px 0 5px 22px; position:relative; line-height:1.6; }
+  .tips li::before { content:'→'; position:absolute; left:0; color:var(--purple); font-weight:600; }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style:none; padding:0; }
+  .checklist li { font-size:14px; color:var(--muted); padding:7px 0 7px 28px; position:relative; line-height:1.6; border-bottom:1px solid rgba(0,0,0,0.04); }
+  .checklist li:last-child { border-bottom:none; }
+  .checklist li::before { content:'✓'; position:absolute; left:0; color:var(--teal-lt); font-weight:700; font-size:15px; }
+  .checklist li.warn::before { content:'⚠'; color:var(--yellow); }
+  .checklist li.stop::before { content:'✗'; color:var(--coral); }
+
+  /* ── ROLE CARDS ── */
+  .rg { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; }
+  .rc { background:#fff; border-radius:20px; padding:26px; border:1px solid rgba(0,0,0,0.04); position:relative; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+  .rc::after { content:''; position:absolute; bottom:0; left:0; right:0; height:4px; background:var(--rc,var(--purple)); }
+  .ri { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:14px; background:var(--rb,rgba(113,75,103,0.1)); }
+  .rn { font-family:'Caveat',cursive; font-size:18px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .rs { font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--rc,var(--teal)); margin-bottom:10px; }
+  .rl { list-style:none; padding:0; }
+  .rl li { font-size:12.5px; color:var(--muted); padding:3px 0 3px 14px; position:relative; line-height:1.5; }
+  .rl li::before { content:'·'; position:absolute; left:4px; color:var(--rc,var(--purple)); font-size:16px; line-height:1.3; }
+
+  /* ── ACCORDION ── */
+  .acc { display:flex; flex-direction:column; gap:10px; }
+  .ai { background:#fff; border-radius:18px; border:1px solid rgba(0,0,0,0.04); overflow:hidden; box-shadow:0 1px 8px rgba(0,0,0,0.04); }
+  .ah { display:flex; justify-content:space-between; align-items:center; padding:20px 26px; cursor:pointer; transition:background .2s; }
+  .ah:hover { background:#faf7f9; }
+  .al { display:flex; align-items:center; gap:14px; }
+  .aicon { width:36px; height:36px; border-radius:10px; background:rgba(113,75,103,0.08); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .at { font-family:'Caveat',cursive; font-size:18px; font-weight:700; color:var(--text); }
+  .atog { font-size:22px; color:var(--purple); transition:transform .3s; flex-shrink:0; }
+  .ai.open .atog { transform:rotate(45deg); }
+  .ab { display:none; padding:0 26px 26px; }
+  .ai.open .ab { display:block; }
+  .ab p { font-size:14px; color:var(--muted); line-height:1.8; margin-bottom:14px; }
+
+  /* ── TACTIC ── */
+  .tactic { background:#faf7f9; border-radius:12px; padding:16px 18px; margin-bottom:10px; border-left:3px solid var(--teal-lt); }
+  .tac-l { font-family:'Caveat',cursive; font-size:15px; font-weight:700; color:var(--teal); margin-bottom:5px; }
+  .tac-t { font-size:13.5px; color:var(--muted); line-height:1.7; }
+
+  /* ── OBJECTION CARDS ── */
+  .obj-card { background:#fff; border-radius:18px; border:1px solid rgba(0,0,0,0.04); overflow:hidden; margin-bottom:10px; box-shadow:0 1px 8px rgba(0,0,0,0.04); }
+  .obj-q { padding:14px 20px; background:rgba(113,75,103,0.05); }
+  .obj-q-text { font-size:14px; font-weight:600; color:var(--purple); font-style:italic; }
+  .obj-body { padding:16px 20px; }
+  .obj-concern { font-size:12px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .obj-rebuttal { font-size:13.5px; color:var(--muted); line-height:1.75; }
+
+  /* ── CYCLE STEPS ── */
+  .cg { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:28px 0; }
+  @media(max-width:700px){.cg{grid-template-columns:1fr;}}
+  .cs { background:#fff; border-radius:18px; padding:22px; text-align:center; border:1px solid rgba(0,0,0,0.04); box-shadow:0 1px 8px rgba(0,0,0,0.04); position:relative; overflow:hidden; }
+  .cs::before { content:''; position:absolute; top:-20px; right:-20px; width:60px; height:60px; border-radius:50%; background:var(--csb,rgba(1,126,132,0.06)); }
+  .cn { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--teal); margin-bottom:8px; }
+  .cname { font-family:'Caveat',cursive; font-size:20px; font-weight:700; color:var(--text); margin-bottom:8px; }
+  .cdesc { font-size:12.5px; color:var(--muted); line-height:1.65; }
+
+  /* ── KPI ROW ── */
+  .krow { display:flex; gap:16px; flex-wrap:wrap; margin:24px 0 36px; }
+  .kpi { flex:1; min-width:110px; background:var(--purple); border-radius:18px; padding:22px 14px; text-align:center; }
+  .kv { font-family:'Caveat',cursive; font-size:36px; font-weight:700; color:#fff; display:block; line-height:1; }
+  .kd { font-size:11px; color:rgba(255,255,255,.5); margin-top:5px; line-height:1.4; }
+
+  /* ── COMPARISON TABLE ── */
+  .compare-table { width:100%; border-collapse:collapse; border-radius:16px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.06); margin:24px 0; }
+  .compare-table th { padding:16px 20px; text-align:left; font-family:'Caveat',cursive; font-size:18px; font-weight:700; color:#fff; }
+  .compare-table th:first-child { background:var(--purple); }
+  .compare-table th:last-child  { background:var(--teal); }
+  .compare-table td { padding:14px 20px; font-size:13.5px; color:var(--muted); line-height:1.6; vertical-align:top; border-bottom:1px solid rgba(0,0,0,0.06); background:#fff; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  .compare-table td:first-child { border-right:1px solid rgba(0,0,0,0.06); }
+  .compare-table td .tag { display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; margin-right:4px; margin-bottom:2px; }
+  .tag-green  { background:rgba(26,188,156,0.12); color:var(--teal); }
+  .tag-red    { background:rgba(240,107,122,0.12); color:var(--coral); }
+  .tag-gray   { background:rgba(0,0,0,0.06); color:var(--muted); }
+  .tag-purple { background:rgba(113,75,103,0.1); color:var(--purple); }
+
+  /* ── 80/20 VISUAL ── */
+  .ratio-bar { background:#F0EBF0; border-radius:12px; height:44px; overflow:hidden; margin:16px 0; display:flex; }
+  .ratio-standard { background:var(--teal-lt); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; width:80%; border-radius:12px 0 0 12px; }
+  .ratio-dev { background:var(--coral); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; width:20%; border-radius:0 12px 12px 0; }
+
+  /* ── FEEL-FELT-FOUND ── */
+  .fff-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:24px 0; }
+  @media(max-width:700px){.fff-grid{grid-template-columns:1fr;}}
+  .fff-card { border-radius:18px; padding:28px 24px; text-align:center; }
+  .fff-feel   { background:rgba(113,75,103,0.08); }
+  .fff-felt   { background:rgba(1,126,132,0.08); }
+  .fff-found  { background:rgba(26,188,156,0.08); }
+  .fff-num { font-family:'Caveat',cursive; font-size:40px; font-weight:700; margin-bottom:6px; line-height:1; }
+  .fff-feel .fff-num   { color:var(--purple); }
+  .fff-felt .fff-num   { color:var(--teal); }
+  .fff-found .fff-num  { color:var(--teal-lt); }
+  .fff-word { font-family:'Caveat',cursive; font-size:22px; font-weight:700; color:var(--text); margin-bottom:10px; }
+  .fff-desc { font-size:13.5px; color:var(--muted); line-height:1.7; }
+
+  /* ── COMMANDMENTS ── */
+  .cmd { background:#fff; border-radius:18px; padding:26px 28px; display:flex; gap:18px; align-items:flex-start; margin-bottom:12px; border:1px solid rgba(0,0,0,0.04); box-shadow:0 1px 8px rgba(0,0,0,0.04); }
+  .cmd-n { font-family:'Caveat',cursive; font-size:40px; font-weight:700; color:rgba(113,75,103,0.18); line-height:1; flex-shrink:0; width:44px; }
+  .cmd-t { font-family:'Caveat',cursive; font-size:20px; font-weight:700; color:var(--text); margin-bottom:7px; }
+  .cmd-b { font-size:14px; color:var(--muted); line-height:1.75; }
+
+  /* ── DIFF GRID ── */
+  .dg { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-top:28px; }
+  .dc { background:var(--purple); border-radius:16px; padding:22px 18px; text-align:center; }
+  .di { font-size:26px; margin-bottom:10px; }
+  .dl { font-family:'Caveat',cursive; font-size:16px; font-weight:700; color:#fff; margin-bottom:5px; }
+  .dd { font-size:12px; color:rgba(255,255,255,.52); line-height:1.6; }
+
+  /* ── H3 ── */
+  .h3 { font-family:'Caveat',cursive; font-size:22px; font-weight:700; color:var(--text); margin:36px 0 16px; display:inline-block; }
+
+  /* ── BRUSH STROKE ── */
+  .brush { display:block; margin-bottom:10px; }
+
+  /* ── FOOTER ── */
+  .footer { background:var(--purple); text-align:center; padding:36px; }
+  .fl { height:20px; opacity:.45; display:block; margin:0 auto 12px; }
+  .ft { font-size:12px; color:rgba(255,255,255,.32); }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:768px){
+    .topbar{padding:12px 20px;} .hero{padding:40px 24px 48px;} .section{padding:40px 20px;}
+    .stats{gap:12px;} .stat{padding-right:16px;margin-right:16px;}
+    .pi{grid-template-columns:64px 20px 1fr;} .pp-n{font-size:20px;}
+    .g2,.g3,.g4{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <img src="https://odoocdn.com/openerp_website/static/src/img/assets/png/odoo_logo_inverted.png" alt="Odoo" class="topbar-logo">
+  <span class="topbar-div"></span>
+  <span class="topbar-lbl">Implementation Playbook</span>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <h1>The Odoo<br>Implementation <span class="hl">Playbook<svg viewBox="0 0 200 10" preserveAspectRatio="none"><path d="M2,7 C40,2 100,9 140,5 C165,2 185,8 198,5" stroke="#1ABC9C" stroke-width="4" fill="none" stroke-linecap="round"/></svg></span></h1>
+    <p class="hero-sub">The complete guide to understanding, executing, qualifying, and selling Odoo's implementation services — philosophy, process, operational rules, objection handling, and sales strategy in one place.</p>
+    <div class="stats">
+      <div class="stat"><span class="stat-n">95%+</span><div class="stat-l">Successful Implementations</div></div>
+      <div class="stat"><span class="stat-n">5</span><div class="stat-l">Project Phases</div></div>
+      <div class="stat"><span class="stat-n">80/20</span><div class="stat-l">Standard vs. Dev Rule</div></div>
+      <div class="stat"><span class="stat-n">7×</span><div class="stat-l">Easier to Upsell Existing Clients</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-wrap">
+  <nav class="nav">
+    <button class="nav-btn active" onclick="show('s1',this)">01 · Philosophy</button>
+    <button class="nav-btn" onclick="show('s2',this)">02 · Roles</button>
+    <button class="nav-btn" onclick="show('s3',this)">03 · Phases</button>
+    <button class="nav-btn" onclick="show('s4',this)">04 · Process Cycle</button>
+    <button class="nav-btn" onclick="show('s5',this)">05 · QuickStart Guidelines</button>
+    <button class="nav-btn" onclick="show('s6',this)">06 · Challenges</button>
+    <button class="nav-btn" onclick="show('s7',this)">07 · Objection Handling</button>
+    <button class="nav-btn" onclick="show('s8',this)">08 · Selling It</button>
+  </nav>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════════════════════
+     01 · PHILOSOPHY
+═══════════════════════════════════════════ -->
+<div id="s1" class="section active">
+  <div class="sh">
+    <div class="sh-eye">Section 01</div>
+    <div class="sh-title">The Philosophy</div>
+    <p class="sh-lead">Before touching a single configuration — or a single prospect — you need to internalize what Odoo actually believes about implementation. This is the "why" that governs every decision on every project.</p>
+  </div>
+
+  <div class="callout">
+    <div class="callout-l">The One-Sentence Version</div>
+    <p>A project is successful when it goes live <strong>on time and on budget</strong>. Everything else — customer satisfaction during the project, custom features, early upsells — is secondary. Common sense always prevails over any rule.</p>
+  </div>
+
+  <div class="h3">The 3 QuickStart Principles</div>
+  <div class="g3" style="margin-bottom:8px;">
+    <div class="pc" style="--bc:rgba(41,171,226,0.07);--nc:rgba(41,171,226,0.14);">
+      <div class="pc-n">01</div>
+      <svg class="brush" viewBox="0 0 120 8" style="width:90px;height:8px;"><path d="M2,5 C30,1 70,7 90,4 C108,2 116,6 118,4" stroke="#29ABE2" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>
+      <div class="pc-t">Stay Standard</div>
+      <p class="pc-b">Every deviation from standard increases complexity exponentially — not linearly. Adapt the customer's process to Odoo, not Odoo to the customer's process. The platform is flexible; the methodology is firm.</p>
+    </div>
+    <div class="pc" style="--bc:rgba(1,126,132,0.07);--nc:rgba(1,126,132,0.14);">
+      <div class="pc-n">02</div>
+      <svg class="brush" viewBox="0 0 120 8" style="width:90px;height:8px;"><path d="M2,5 C30,1 70,7 90,4 C108,2 116,6 118,4" stroke="#1ABC9C" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>
+      <div class="pc-t">Deliver Fast</div>
+      <p class="pc-b">Speed over customization keeps projects on schedule and reduces risk. A fast Go-Live builds momentum and trust. The longer a project drags, the more costly and risky it becomes — for everyone.</p>
+    </div>
+    <div class="pc" style="--bc:rgba(245,166,35,0.07);--nc:rgba(245,166,35,0.14);">
+      <div class="pc-n">03</div>
+      <svg class="brush" viewBox="0 0 120 8" style="width:90px;height:8px;"><path d="M2,5 C30,1 70,7 90,4 C108,2 116,6 118,4" stroke="#F5A623" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>
+      <div class="pc-t">Keep It Affordable</div>
+      <p class="pc-b">Custom development carries ~25% annual maintenance cost. Affordable, fast implementations win more business, generate referrals, and build the long-term relationships that drive genuine upsell.</p>
+    </div>
+  </div>
+
+  <div class="h3">What Is — and Isn't — a Priority</div>
+  <div class="g2">
+    <div class="card c-teal">
+      <div class="card-t">✅ What Actually Matters</div>
+      <p class="card-b">Getting users onto Odoo <strong>on time and within budget</strong>. Budget overruns and timeline slippage are the two reasons projects fail — full stop. A delivered, imperfect system beats a delayed, perfect one every time.</p>
+    </div>
+    <div class="card c-coral">
+      <div class="card-t">❌ Common Traps to Avoid</div>
+      <ul class="tips">
+        <li>Custom development as a priority before Go-Live</li>
+        <li>Using customer satisfaction as your KPI mid-project</li>
+        <li>Upselling additional services before the project goes live</li>
+        <li>Importing full data history when master data suffices</li>
+        <li>Writing documentation for the customer instead of training them to write it</li>
+        <li>Accepting scope creep mid-cycle without dropping something else</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="h3">Why Customer Satisfaction Isn't the Goal Mid-Project</div>
+  <div class="card c-blue" style="margin-bottom:24px;">
+    <p class="card-b">Customer satisfaction fluctuates constantly throughout a project. Key-users want more features; the CEO wants on-time and on-budget — these goals directly conflict. A Project Leader who optimizes for mid-project satisfaction risks losing the project itself. Temporary dissatisfaction from a tough conversation is far better than a missed deadline. Periodic ratings are used to identify customers who need more attention — not to grade Project Leaders.</p>
+  </div>
+
+  <div class="h3">The Long Game on Upselling</div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-t">Why We Don't Upsell Before Go-Live</div>
+      <p class="card-b">Every time you upsell before Go-Live, you weaken trust. Customers may think twice before buying future services. A bloated first project destroys the relationship that enables long-term revenue. Focus on success first — upsell follows naturally from satisfied customers.</p>
+    </div>
+    <div class="card">
+      <div class="card-t">The Better Strategy</div>
+      <p class="card-b">Deliver fast. Build trust. Then upsell from strength. It's <strong>7× easier</strong> to sell to an existing happy customer than to acquire a new one. Phase non-essential features after Go-Live — this protects margins, reduces project risk, and creates a natural future engagement cycle.</p>
+    </div>
+  </div>
+
+  <div class="story">
+    <div class="si">
+      <span class="sq">"</span>
+      <p class="st">During the first 3 months, I didn't like working with Frédéric. He was constantly questioning everything I asked for, to the point I felt I was wasting my time. But later, I understood it was for the good of the project. He often found better solutions than what I asked for. Now, even in production, every time I have a business decision to make on a process, I call him first to get his advice.</p>
+      <div class="sa">— Customer Feedback · Shared by Fabien, Odoo Founder</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     02 · ROLES
+═══════════════════════════════════════════ -->
+<div id="s2" class="section">
+  <div class="sh">
+    <div class="sh-eye">Section 02</div>
+    <div class="sh-title">Roles & Responsibilities</div>
+    <p class="sh-lead">Traditional ERPs split Project Manager, Business Analyst, and Product Expert into separate people. Odoo collapses these into one — because splitting them creates slow, inefficient decisions and removes accountability.</p>
+  </div>
+
+  <div class="callout">
+    <div class="callout-l">Core Principle: Fewer People, Faster Decisions</div>
+    <p>Odoo is simple enough that one person can understand both the business and the product simultaneously. This is a structural competitive advantage. The Project Leader wears every hat — and that's intentional.</p>
+  </div>
+
+  <div class="h3">The Odoo Team</div>
+  <div class="rg">
+    <div class="rc" style="--rc:#714B67;--rb:rgba(113,75,103,0.1);">
+      <div class="ri">👤</div>
+      <div class="rn">Project Leader / BSA</div>
+      <div class="rs">PM + BA + Product Expert</div>
+      <ul class="rl">
+        <li>Defines and owns the project plan</li>
+        <li>Challenges all customer demands</li>
+        <li>Configures Odoo directly</li>
+        <li>Manages the SPoC relationship daily</li>
+        <li>Writes specifications for any dev needed</li>
+        <li>Handles all data migration decisions</li>
+        <li>Drives the entire project forward</li>
+      </ul>
+    </div>
+    <div class="rc" style="--rc:#017E84;--rb:rgba(1,126,132,0.1);">
+      <div class="ri">🎯</div>
+      <div class="rn">Project Director</div>
+      <div class="rs">Large or Political Projects Only</div>
+      <ul class="rl">
+        <li>Manages executive-level expectations</li>
+        <li>Reports to steering committees</li>
+        <li>Tracks project efficiency from above</li>
+        <li>Does NOT work full-time on the project</li>
+        <li>On smaller projects, PL handles this role</li>
+      </ul>
+    </div>
+    <div class="rc" style="--rc:#F5A623;--rb:rgba(245,166,35,0.1);">
+      <div class="ri">🔬</div>
+      <div class="rn">App Expert</div>
+      <div class="rs">Finance, Inventory, Mfg, etc.</div>
+      <ul class="rl">
+        <li>Deep functional + industry knowledge</li>
+        <li>Not on the project full-time</li>
+        <li>Peer reviews at critical decision points</li>
+        <li>Especially valuable during GAP Analysis</li>
+        <li>Makes tough calls without project bias</li>
+      </ul>
+    </div>
+    <div class="rc" style="--rc:#29ABE2;--rb:rgba(41,171,226,0.1);">
+      <div class="ri">⚙️</div>
+      <div class="rn">Developer</div>
+      <div class="rs">Only If Genuinely Necessary</div>
+      <ul class="rl">
+        <li>Most small companies don't need one</li>
+        <li>Engaged only for justified custom dev</li>
+        <li>Responsible for automated testing</li>
+        <li>Works from PL-written specifications</li>
+        <li>Custom dev only deliverable on Odoo.SH</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="h3">The Customer Team</div>
+  <div class="rg">
+    <div class="rc" style="--rc:#714B67;--rb:rgba(113,75,103,0.08);">
+      <div class="ri">⭐</div>
+      <div class="rn">SPoC</div>
+      <div class="rs">Single Point of Contact · Most Critical Role</div>
+      <ul class="rl">
+        <li>The BSA's primary counterpart — always</li>
+        <li><strong>Must have real decision-making authority</strong></li>
+        <li>Gathers and validates all requirements</li>
+        <li>Becomes the internal Odoo champion</li>
+        <li>Tests all BSA-provided Odoo flows</li>
+        <li>Plans and executes end-user training</li>
+        <li>Creates user manuals and documentation</li>
+        <li>Works on all open tasks assigned by BSA</li>
+        <li>Time commitment typically 2× the BSA's hours</li>
+      </ul>
+    </div>
+    <div class="rc" style="--rc:#1ABC9C;--rb:rgba(26,188,156,0.08);">
+      <div class="ri">👥</div>
+      <div class="rn">Key Users</div>
+      <div class="rs">Domain Experts (Larger Projects)</div>
+      <ul class="rl">
+        <li>Help SPoC define requirements by department</li>
+        <li>Test and validate deliverables</li>
+        <li>Should be trained early on in the project</li>
+        <li>Deep involvement from day one</li>
+        <li>In case of conflicting info, SPoC's definition wins</li>
+      </ul>
+    </div>
+    <div class="rc" style="--rc:#F5A623;--rb:rgba(245,166,35,0.08);">
+      <div class="ri">🏛️</div>
+      <div class="rn">Sponsor / Steering</div>
+      <div class="rs">CEO / CFO · Decision Authority</div>
+      <ul class="rl">
+        <li>Pays for and ultimately owns the project</li>
+        <li>High-level objectives only</li>
+        <li>Must visibly support the project to staff</li>
+        <li>Critical buffer when user resistance peaks</li>
+        <li>Must challenge stakeholders' requests</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert yellow" style="margin-top:24px;">
+    <div class="alert-i">⚠️</div>
+    <div class="alert-t"><strong>The SPoC Must Have Real Authority.</strong> A SPoC who needs sign-off from above on every decision is one of the top causes of project failure. If the real decision-maker can't be the SPoC, escalate this before the project starts — not three months in.</div>
+  </div>
+
+  <div class="story">
+    <div class="si">
+      <span class="sq">"</span>
+      <p class="st">The first implementation went very well — full scope into production in a few months, due to great collaboration with the SPoC. The second was a nightmare. The CEO acted as SPoC but was unavailable. Every decision needed CEO validation, adding days to the process. Just by improving the decision-making structure, we dramatically increased efficiency.</p>
+      <div class="sa">— Benjamin, Project Leader, Odoo BE</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     03 · PHASES
+═══════════════════════════════════════════ -->
+<div id="s3" class="section">
+  <div class="sh">
+    <div class="sh-eye">Section 03</div>
+    <div class="sh-title">Implementation Phases</div>
+    <p class="sh-lead">Every Odoo project follows the same five-phase structure. The percentages represent time allocation — they are guardrails, not rigid rules, but consistently violating them is how projects fail.</p>
+  </div>
+
+  <div class="krow">
+    <div class="kpi"><span class="kv">10%</span><div class="kd">ROI Analysis</div></div>
+    <div class="kpi"><span class="kv">5%</span><div class="kd">Kick-Off</div></div>
+    <div class="kpi"><span class="kv">80%</span><div class="kd">Implementation</div></div>
+    <div class="kpi"><span class="kv">5%</span><div class="kd">Go-Live</div></div>
+    <div class="kpi"><span class="kv">+</span><div class="kd">2nd Deployment</div></div>
+  </div>
+
+  <div class="phases">
+    <div class="pi">
+      <div class="pp"><span class="pp-n">10%</span><span class="pp-l">of project</span></div>
+      <div class="ps"><div class="pd"></div><div class="pl"></div></div>
+      <div class="pc2">
+        <div class="pn">Phase 1 · ROI Analysis</div>
+        <div class="pg">Validate feasibility, define scope & budget</div>
+        <p class="pb">Sold before the customer commits to the full project on larger engagements. Ranges from 3 to 50 days depending on complexity. On smaller projects, this is performed during Kick-Off. At this stage the BSA is still a <em>salesperson</em> — the project isn't won yet. Historical data imports must be reviewed by the Pre-Sales team or BSA Manager before being included in scope.</p>
+        <ul class="tips">
+          <li>Be a salesperson — reassure and motivate, run live demos of key features</li>
+          <li>Observe how they currently work; current state matters more than future goals</li>
+          <li>Never present multiple options — propose one best solution and let them challenge it</li>
+          <li>Classify items as "optional" yourself; don't let the customer make that call</li>
+          <li>Peer-review with an App Expert before presenting results to the customer</li>
+          <li>All development must be classified: must-have before Go-Live, or post Go-Live</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pi">
+      <div class="pp"><span class="pp-n">5%</span><span class="pp-l">of project</span></div>
+      <div class="ps"><div class="pd"></div><div class="pl"></div></div>
+      <div class="pc2">
+        <div class="pn">Phase 2 · Project Kick-Off</div>
+        <div class="pg">Align everyone, set expectations, build a real plan</div>
+        <p class="pb">The highest-leverage phase. The entire project's success depends on how well you execute it. You're generating buy-in, setting honest expectations, and aligning everyone on the <em>Odoo</em> methodology — not the customer's preferred methodology. If the planning looks too short, negotiate now. This is where you earn the right to lead the project.</p>
+        <ul class="tips">
+          <li>SPoC formally understands and commits to the methodology</li>
+          <li>Expectations set honestly — including what will be difficult</li>
+          <li>Project plan finalized with realistic, agreed-upon timelines</li>
+          <li>SPoC begins learning Odoo immediately via eLearning</li>
+          <li>Onboard the customer's project team in the change strategy</li>
+        </ul>
+        <div class="alert yellow">
+          <div class="alert-i">⚠️</div>
+          <div class="alert-t"><strong>Don't delay hard conversations.</strong> Inexperienced PLs avoid difficult discussions during Kick-Off — this is among the most common causes of late-stage project failure. Tackle misalignment early or it compounds.</div>
+        </div>
+      </div>
+    </div>
+    <div class="pi">
+      <div class="pp"><span class="pp-n">80%</span><span class="pp-l">of project</span></div>
+      <div class="ps"><div class="pd"></div><div class="pl"></div></div>
+      <div class="pc2">
+        <div class="pn">Phase 3 · Implementation</div>
+        <div class="pg">Build, configure, validate, and train in short weekly cycles</div>
+        <p class="pb">The project moves forward in repeating short cycles — analyze, configure, test, train, import, launch. The solution is shaped progressively. The SPoC is engaged at every step. Maintaining a steady pace is the single biggest success factor — keep the SPoC engaged in everything and momentum will follow.</p>
+        <ul class="tips">
+          <li><strong>Configuration:</strong> BSA configures directly including Studio; SPoC validates through sessions</li>
+          <li><strong>Data Import:</strong> Master data only; avoid full history; never delay Go-Live for data quality</li>
+          <li><strong>Custom Dev:</strong> Must-haves only before Go-Live; BSA writes every spec; SPoC attests conformity</li>
+          <li>Have the SPoC drive the keyboard during training — not just observe</li>
+          <li>Don't accept mid-cycle change requests unless another requirement is dropped</li>
+          <li>Never implement something you're not convinced of — a contract is less important than project success</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pi">
+      <div class="pp"><span class="pp-n">5%</span><span class="pp-l">of project</span></div>
+      <div class="ps"><div class="pd"></div><div class="pl"></div></div>
+      <div class="pc2">
+        <div class="pn">Phase 4 · Go-Live</div>
+        <div class="pg">Put it in production — fast, even if imperfect</div>
+        <p class="pb">Issues at Go-Live are normal. Your job is to react quickly, not to prevent all issues. <strong>Never push back the Go-Live date.</strong> The risks of delay almost always outweigh the risks of going live with known issues — pushing the deadline by months exposes the project to extra costs, motivation loss, and new change requests that weren't on the table before.</p>
+        <ul class="tips">
+          <li>Training is not a conference — have users perform the flows themselves</li>
+          <li>Create momentum: make Go-Live something the team anticipates and celebrates</li>
+          <li>React to issues quickly — problems are acceptable if fixes are fast</li>
+          <li>Be on-site day one if there is strong user resistance to change</li>
+          <li>Check days later that users are in Odoo — not reverting to old software out of habit</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pi">
+      <div class="pp"><span class="pp-n">+</span><span class="pp-l">post Go-Live</span></div>
+      <div class="ps"><div class="pd"></div></div>
+      <div class="pc2">
+        <div class="pn">Phase 5 · Second Deployment & Progress Report</div>
+        <div class="pg">Expand scope based on real production experience</div>
+        <p class="pb">About one month after Go-Live, review the deferred development backlog. <strong>Typically 50% of planned development is no longer needed</strong> once users are in production — and better-informed new requests emerge that the customer couldn't have anticipated during planning. The Progress Report engages top management using the Digital Opportunities Matrix: Quick Wins, Game Changers, Fine Tuning, and what to Avoid. This is where organic, trusted upsell happens naturally — and why doing the first project right is so important.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     04 · PROCESS CYCLE
+═══════════════════════════════════════════ -->
+<div id="s4" class="section">
+  <div class="sh">
+    <div class="sh-eye">Section 04</div>
+    <div class="sh-title">The Process Cycle</div>
+    <p class="sh-lead">Within the Implementation phase, the team works in repeating short cycles. Each cycle follows the same six-step sequence, delivering tangible progress every week and keeping the customer engaged and accountable.</p>
+  </div>
+
+  <div class="cg">
+    <div class="cs" style="--csb:rgba(41,171,226,0.07);">
+      <div class="cn">Step 01</div>
+      <svg viewBox="0 0 80 6" style="width:60px;height:6px;margin:0 auto 8px;display:block;"><path d="M2,3 C20,1 50,5 78,3" stroke="#29ABE2" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+      <div class="cname">Analyze</div>
+      <p class="cdesc">Analyze business workflows to determine configuration strategy. Ask "why," not just "what." Always understand the current state before designing the future state.</p>
+    </div>
+    <div class="cs" style="--csb:rgba(1,126,132,0.07);">
+      <div class="cn">Step 02</div>
+      <svg viewBox="0 0 80 6" style="width:60px;height:6px;margin:0 auto 8px;display:block;"><path d="M2,3 C20,1 50,5 78,3" stroke="#1ABC9C" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+      <div class="cname">Configure</div>
+      <p class="cdesc">Configure the workflow using Odoo standard features. If unsatisfactory after testing, return to analysis — not to custom development as a first resort.</p>
+    </div>
+    <div class="cs" style="--csb:rgba(245,166,35,0.07);">
+      <div class="cn">Step 03</div>
+      <svg viewBox="0 0 80 6" style="width:60px;height:6px;margin:0 auto 8px;display:block;"><path d="M2,3 C20,1 50,5 78,3" stroke="#F5A623" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+      <div class="cname">Test & Validate</div>
+      <p class="cdesc">SPoC and key users test the workflow and validate for business use. If unsatisfactory, return to analysis — not to a growing backlog of exceptions.</p>
+    </div>
+    <div class="cs" style="--csb:rgba(240,107,122,0.07);">
+      <div class="cn">Step 04</div>
+      <svg viewBox="0 0 80 6" style="width:60px;height:6px;margin:0 auto 8px;display:block;"><path d="M2,3 C20,1 50,5 78,3" stroke="#F06B7A" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+      <div class="cname">Train Users</div>
+      <p class="cdesc">Train SPoC and key users on validated workflows. SPoC drives the keyboard — not just watches. Training is hands-on practice and active participation, never a presentation.</p>
+    </div>
+    <div class="cs" style="--csb:rgba(113,75,103,0.07);">
+      <div class="cn">Step 05</div>
+      <svg viewBox="0 0 80 6" style="width:60px;height:6px;margin:0 auto 8px;display:block;"><path d="M2,3 C20,1 50,5 78,3" stroke="#714B67" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+      <div class="cname">Import Data</div>
+      <p class="cdesc">SPoC gathers and prepares data files. Import master data only. Don't delay Go-Live waiting for perfect data — post-production cleaning is acceptable and common.</p>
+    </div>
+    <div class="cs" style="--csb:rgba(26,188,156,0.07);">
+      <div class="cn">Step 06</div>
+      <svg viewBox="0 0 80 6" style="width:60px;height:6px;margin:0 auto 8px;display:block;"><path d="M2,3 C20,1 50,5 78,3" stroke="#1ABC9C" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+      <div class="cname">Launch</div>
+      <p class="cdesc">Go live on the cycle's scope. Begin using workflows daily. Troubleshoot issues with the BSA immediately as they arise. Fast reaction beats perfect preparation.</p>
+    </div>
+  </div>
+
+  <div class="h3">Digital Opportunities Matrix</div>
+  <div class="card" style="margin-bottom:24px;">
+    <p class="card-b" style="margin-bottom:20px;">Used in the Progress Report phase to identify and prioritize what comes next. Every opportunity is plotted by <strong>potential impact</strong> and <strong>ease of transformation</strong>.</p>
+    <div class="g2">
+      <div class="tactic"><div class="tac-l">🚀 Quick Wins</div><div class="tac-t">High impact + easy to implement. Top priority. These build momentum and deliver visible ROI fast — do these first.</div></div>
+      <div class="tactic"><div class="tac-l">🎯 Game Changers</div><div class="tac-t">High impact + complex to implement. Handle after quick wins. These transform the business but require real planning and commitment.</div></div>
+      <div class="tactic"><div class="tac-l">🔧 Fine Tuning</div><div class="tac-t">Low impact + easy. Nice to have. Schedule when bandwidth allows — these are never a priority over higher-impact work.</div></div>
+      <div class="tactic"><div class="tac-l">🚫 Avoid</div><div class="tac-t">Low impact + complex. No real benefit justifies the cost. Decline confidently — this is a service to the customer, not a failure of ambition.</div></div>
+    </div>
+  </div>
+
+  <div class="h3">Support Structure</div>
+  <div class="g2">
+    <div class="card c-blue">
+      <div class="card-t">During Implementation</div>
+      <ul class="tips">
+        <li><strong>BSA / Implementation Consultant:</strong> Primary contact, functional expert, solutions architect, training lead — drives the entire project</li>
+        <li><strong>Developer:</strong> Custom dev and technical questions only; time and materials; only on Odoo.SH</li>
+        <li><strong>App Expert:</strong> Peer review at critical decision points, especially GAP Analysis</li>
+      </ul>
+    </div>
+    <div class="card c-teal">
+      <div class="card-t">Post Go-Live</div>
+      <ul class="tips">
+        <li><strong>Account Manager:</strong> Billing, payments, contract questions</li>
+        <li><strong>Functional Support:</strong> Generic software questions and bug reports; 24/5 and free — this is <em>not</em> included BSA hours</li>
+        <li><strong>BSA (additional hours):</strong> Expansion phases, training, coaching — requires purchasing additional success pack hours</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     05 · QUICKSTART GUIDELINES
+═══════════════════════════════════════════ -->
+<div id="s5" class="section">
+  <div class="sh">
+    <div class="sh-eye">Section 05</div>
+    <div class="sh-title">QuickStart Guidelines</div>
+    <p class="sh-lead">These are the operational rules that govern what can and cannot be sold as a QuickStart project. Every salesperson must know these before a deal is signed — not after.</p>
+  </div>
+
+  <div class="alert coral">
+    <div class="alert-i">🚨</div>
+    <div class="alert-t"><strong>Non-Compliant Projects:</strong> If a project does not meet these guidelines, the BSA Manager presents the issues to the Sales Manager, who takes over until the project is either refunded or restarted with aligned expectations. There are no exceptions.</div>
+  </div>
+
+  <div class="h3">Must-Have Requirements to Qualify a Project</div>
+  <div class="card" style="margin-bottom:24px;">
+    <ul class="checklist">
+      <li>Project meets the minimum requirements displayed on the Pricing Page — check apps and service type per pack</li>
+      <li>Packs of 25 hours or less are sold with the explicit understanding they are typically insufficient for a full implementation</li>
+      <li>Sales has detailed a clear scope of what will be completed with the purchased hours — this prevents scope creep and underselling</li>
+      <li>The first phase covers the as-is essential flows; further phases cover to-be's and nice-to-haves</li>
+      <li>Customer is hosted on Odoo.sh or SaaS — this applies to all packs</li>
+      <li>Odoo oversees the entire project: planning, analysis, training the SPoC, configuring, going live, supporting post Go-Live, and developments</li>
+      <li>No formal plans to transfer to a partner or third party after Odoo's work is complete at the time of sale</li>
+      <li>SPoC is identified, committed, and has real decision-making authority</li>
+      <li>SPoC's required time commitment increases in relation to BSA hours — if BSA dedicates 5 hrs, SPoC may dedicate 10 hrs</li>
+      <li>If a development is discussed or sold, the "Development FAQ" must be sent to the customer before signing</li>
+      <li class="stop">No integrations to other software for features Odoo already has — exceptions: Shopify, WooCommerce, Magento connectors and SPS Commerce only</li>
+      <li class="stop">All sales are final — there are no refunds (including timesheets)</li>
+      <li class="warn">All projects are subject to current lead time — it is the salesperson's responsibility to set this expectation clearly before signing</li>
+      <li class="warn">If a customer goes on hold or abandons the project for 1+ month, they re-enter the queue at current lead time; re-engagement transition time is billed to the customer</li>
+    </ul>
+  </div>
+
+  <div class="h3">The 80/20 Development Rule</div>
+  <div class="card" style="margin-bottom:24px;">
+    <p class="card-b" style="margin-bottom:16px;">A project must maintain at least an 80% standard / 20% development ratio. A 100-hour project should not include more than 20 hours of custom development.</p>
+    <div class="ratio-bar">
+      <div class="ratio-standard">80% Standard Work</div>
+      <div class="ratio-dev">20% Dev Max</div>
+    </div>
+    <p class="card-b" style="margin-top:12px;">Projects where development line-of-code (LoC) maintenance exceeds 50% of the subscription MRR require case-by-case review. Historical data imports (closed invoices, order history, closed accounting data) require Pre-Sales team or BSA Manager approval before being promised to a customer.</p>
+    <div class="alert yellow" style="margin-top:12px;">
+      <div class="alert-i">⚠️</div>
+      <div class="alert-t">When selling less than the recommended hours, the AE must attach a screenshot of an email to the client in the success pack task explaining this clearly. Documentation protects everyone.</div>
+    </div>
+  </div>
+
+  <div class="h3">Success Pack vs. Partner Pack</div>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>✦ Success Pack (Direct Odoo)</th>
+        <th>◈ Partner Pack</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Odoo leads the implementation and is responsible for project success</td>
+        <td>The partner leads the implementation; Odoo is not responsible for project success</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-green">Proactive</span> BSA drives planning and follows up regularly with the customer</td>
+        <td><span class="tag tag-gray">Reactive</span> Odoo answers when the partner contacts them — no implementation planning provided</td>
+      </tr>
+      <tr>
+        <td>QuickStart methodology applied consistently</td>
+        <td>No specific methodology — partner follows their own approach (OIM mindset recommended)</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-purple">Can say no</span> to a dev request; client must pay LoC maintenance for developments</td>
+        <td><span class="tag tag-gray">Cannot decline</span> most dev requests; no maintenance fee but partner is responsible for bug fixes and upgrades</td>
+      </tr>
+      <tr>
+        <td>Dedicated BSA assigned to the project for its duration</td>
+        <td>Different BSA assigned per request via ticketing system (partnerus@mail.odoo.com)</td>
+      </tr>
+      <tr>
+        <td>SaaS and Odoo.SH implementations</td>
+        <td>SaaS, Odoo.SH, and limited support for On-Premise implementations</td>
+      </tr>
+      <tr>
+        <td>Expires in 1 year</td>
+        <td>Does not expire</td>
+      </tr>
+      <tr>
+        <td>Sold by DS and CS to end-customers, or by PR & AM when a partner is shadowing for learning purposes</td>
+        <td>Sold by AM or PR to official and ready partners only</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="h3">Third-Party App (3PA) Policy by Hosting Type</div>
+  <p style="font-size:14px;color:var(--muted);line-height:1.75;margin-bottom:20px;">The hosting environment determines what third-party apps are allowed and what Odoo will support. This has a direct impact on what can be promised during the sale.</p>
+  <div class="g3">
+    <div class="card c-teal">
+      <div class="card-t">SaaS</div>
+      <p class="card-b">The most restrictive environment. eCommerce connectors (Shopify, WooCommerce, Magento) are <strong>not allowed</strong>. Any third-party app is not allowed on SaaS — only outside connectors (apps installed on the external system, not on Odoo) are permissible. Custom development is not deliverable on SaaS.</p>
+    </div>
+    <div class="card c-blue">
+      <div class="card-t">Odoo.SH — Odoo-Owned Repo</div>
+      <p class="card-b">eCommerce connectors (Shopify, WooCommerce, Magento) are allowed; LoC maintenance not required, but Odoo developers will not bug-fix or upgrade them, and BSA cannot provide ongoing support for them. Third-party apps approved through code review are allowed with LoC maintenance and full bug-fix support. Rejected 3PAs are not allowed.</p>
+    </div>
+    <div class="card c-gold">
+      <div class="card-t">Odoo.SH — Client-Owned Repo</div>
+      <p class="card-b">Most permissive but most technical. eCommerce connectors behave the same as Odoo-owned repo. Any third-party app is technically allowed regardless of code review, but Odoo developers will not bug-fix or upgrade them and BSA cannot provide ongoing support. Requires a very technical client — or passing to a partner.</p>
+    </div>
+  </div>
+
+  <div class="alert blue" style="margin-top:8px;">
+    <div class="alert-i">📌</div>
+    <div class="alert-t">Custom developments are only deliverable on Odoo.SH. If Studio will be used in an advanced way (calculated fields, automated actions, report customizations) or if custom development is anticipated, the client must be on a major version of Odoo or Odoo.SH before the project starts.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     06 · CHALLENGES
+═══════════════════════════════════════════ -->
+<div id="s6" class="section">
+  <div class="sh">
+    <div class="sh-eye">Section 06</div>
+    <div class="sh-title">Implementation Challenges</div>
+    <p class="sh-lead">Every project has predictable friction points. These aren't surprises — they're patterns. Knowing them in advance means you navigate instead of being blindsided.</p>
+  </div>
+
+  <div class="acc">
+    <div class="ai open">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🔄</div><div class="at">How to Handle User Resistance to Change</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <p>Humans are deeply resistant to change — from the newest employee to the founder. Never sideline resistant people. Invest time in them. A change is always perceived as a cost and a risk. People will accept that cost only when the benefit is clearly, concretely larger. Don't dismiss the difficulty — acknowledge it, then sell the benefit.</p>
+        <div class="tactic"><div class="tac-l">The Product</div><div class="tac-t">Once users see features that directly benefit their daily work, acceptance increases rapidly. Tailor demos to their specific pain points. Don't demo generic flows to a resistant accountant — demo bank reconciliation.</div></div>
+        <div class="tactic"><div class="tac-l">The SPoC & Key Users</div><div class="tac-t">Their positivity and credibility within the company is your most powerful change management asset. A skeptical SPoC will poison the well. A champion SPoC will turn resistors into advocates. Invest in making them a true champion before Go-Live.</div></div>
+        <div class="tactic"><div class="tac-l">Executive Sponsorship</div><div class="tac-t">The CEO visibly supporting the project changes the dynamic entirely. Secure this during Kick-Off and remind the sponsor of their role when resistance escalates. A CEO who supports the project publicly saves implementations that would otherwise be abandoned.</div></div>
+      </div>
+    </div>
+
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🛑</div><div class="at">How to Handle Custom Development Requests (4 Tactics)</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <p>Custom development costs approximately 25% of its original build cost every single year in maintenance and upgrades. Project complexity grows exponentially with each customization — not linearly. Remember the 80/20 rule: no more than 20% of project hours on development. Run all four challenges before agreeing to anything:</p>
+        <div class="tactic"><div class="tac-l">Tactic 1 · Is It Really Necessary?</div><div class="tac-t">Did the customer have this feature in their old software? If not, they can live without it for now. Recommend going live first and reassessing after production. Customer priorities almost always change once they're actually using the system.</div></div>
+        <div class="tactic"><div class="tac-l">Tactic 2 · Is It Worth Supporting the Cost?</div><div class="tac-t">Evaluate real benefit (hours saved per month) vs. the real cost (build + 2–3× ongoing maintenance over 5 years). Customers typically see only the one-time dev cost. Help them see the true total cost of ownership before they commit.</div></div>
+        <div class="tactic"><div class="tac-l">Tactic 3 · Is the Gain Significant Enough?</div><div class="tac-t">Question the volume. If a feature saves 10 minutes but applies to only 2 cases per month, a 10-day development is never justified. Quantify the time saved vs. the time invested before writing a line of code.</div></div>
+        <div class="tactic"><div class="tac-l">Tactic 4 · Can We Serve the Same Need Differently?</div><div class="tac-t">There is almost always a standard workaround, a simpler configuration, a Studio solution, or a third-party service that solves the problem in hours rather than weeks. Always explore this path first before writing a specification.</div></div>
+        <div class="alert teal">
+          <div class="alert-i">💡</div>
+          <div class="alert-t">When you convince the customer to avoid a development, explain exactly why. The more they understand your reasoning, the more they trust your judgment — and the more valuable your relationship becomes long-term.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">📊</div><div class="at">How to Manage Customer Expectations</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <p>Experienced Project Leaders set hard expectations upfront — not to discourage the customer, but to ensure that when things get difficult (and they will), the customer doesn't abandon ship. Promise less, deliver more.</p>
+        <div class="tactic"><div class="tac-l">What to Tell Them Upfront</div><div class="tac-t">This project will be difficult. There will be problems. But at the end, your company will be better for it. And I need you — as CEO and sponsor — to support the project when your teams complain, rather than folding to internal resistance.</div></div>
+        <div class="tactic"><div class="tac-l">What Never to Say</div><div class="tac-t">Never say "everything will go smoothly." Never say the change will be easy. Never set timelines that are too short just to close the deal. The short-term win creates a long-term problem for the project, the customer, and the relationship.</div></div>
+      </div>
+    </div>
+
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🧠</div><div class="at">How to Keep Things Simple</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <p>Customers naturally add complexity. Your job is to strip it out — relentlessly. Simplicity is not a stylistic preference; it is a risk reduction strategy. The simpler the implementation, the more likely it succeeds on time and on budget.</p>
+        <div class="tactic"><div class="tac-l">Never Give Multiple Options</div><div class="tac-t">When you present three options, customers spend days deliberating and tend to choose the most complex one. Propose the best solution. Let them challenge it. But you make the recommendation and own the decision.</div></div>
+        <div class="tactic"><div class="tac-l">Force Decisions in the Moment</div><div class="tac-t">Prevent customers from defaulting to "let me check with the team" on every small decision. Delay creates compounding debt. Push for answers in the moment whenever possible — indecision is its own form of scope creep.</div></div>
+        <div class="tactic"><div class="tac-l">Use App Expert Peer Reviews</div><div class="tac-t">An external App Expert can make tough calls without political baggage. Bring them in at critical phases like GAP Analysis — they'll cut complexity that you've become too close to challenge on your own.</div></div>
+      </div>
+    </div>
+
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🏛️</div><div class="at">How to Deal with Internal Politics</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <p>When things go wrong, people look for someone to blame. Internal politics is a game where everyone loses — including the project. The best strategy is to refuse to play. Focus entirely on what moves the project forward.</p>
+        <div class="tactic"><div class="tac-l">Don't Build a Defense. Solve the Problem.</div><div class="tac-t">Nobody cares whose fault it is as much as they care about what you're going to do about it right now. Focus on moving forward — even if the issue technically isn't yours. The project's success is always your responsibility.</div></div>
+        <div class="tactic"><div class="tac-l">Get Key-User Buy-In Before Starting</div><div class="tac-t">Projects imposed from above — where the people using the software weren't consulted and didn't choose it — generate resistance that can derail everything. Identify and address this dynamic during Kick-Off, not three months in.</div></div>
+        <div class="tactic"><div class="tac-l">In Conflicting Situations, the SPoC Decides</div><div class="tac-t">When different employees at the client's organization give conflicting information, the BSA carries out only what the SPoC has defined as a must-have. The SPoC's responsibility is to gather stakeholders, challenge requests, and define priorities — not to pass every conflict back to the BSA.</div></div>
+      </div>
+    </div>
+
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">📝</div><div class="at">How to Write a Good Specification</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <p>When custom development is truly necessary and approved, the specification is the contract between the BSA and the developer. A poor spec wastes time, creates rework, and erodes trust on both sides. Keep it short, visual, and structured.</p>
+        <div class="tactic"><div class="tac-l">Section 1 · Business Need</div><div class="tac-t">The use case (what) and the specific reason this feature is necessary (why). Maximum 2–3 paragraphs. Zero technical language. If the business need can't be explained in plain language, it's not well understood yet.</div></div>
+        <div class="tactic"><div class="tac-l">Section 2 · Functional Specification</div><div class="tac-t">The suggested solution using Odoo (how). Illustrated, wherever possible, with screenshots or mockups with annotations. Visual communication beats verbal description every time.</div></div>
+        <div class="tactic"><div class="tac-l">Section 3 · Technical Hints</div><div class="tac-t">Things the developer specifically needs to watch for: edge cases, integration dependencies, data considerations, and known limitations. This section saves the most time during development.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     07 · OBJECTION HANDLING
+═══════════════════════════════════════════ -->
+<div id="s7" class="section">
+  <div class="sh">
+    <div class="sh-eye">Section 07</div>
+    <div class="sh-title">Objection Handling</div>
+    <p class="sh-lead">By understanding the root causes of common objections and mastering proven rebuttal strategies, you can confidently guide clients toward a successful implementation — even when they're skeptical or resistant.</p>
+  </div>
+
+  <div class="h3">The Feel-Felt-Found Method</div>
+  <p style="font-size:14px;color:var(--muted);line-height:1.75;margin-bottom:20px;">The Feel-Felt-Found method is the foundation of effective objection handling. It builds trust, provides social proof, and leads the customer toward a positive resolution — without dismissing their concern or being defensive.</p>
+
+  <div class="fff-grid">
+    <div class="fff-card fff-feel">
+      <div class="fff-num">1</div>
+      <div class="fff-word">Feel</div>
+      <p class="fff-desc">Acknowledge the customer's concern directly and demonstrate genuine empathy. Don't minimize it — validate that their worry is reasonable and understandable.</p>
+    </div>
+    <div class="fff-card fff-felt">
+      <div class="fff-num">2</div>
+      <div class="fff-word">Felt</div>
+      <p class="fff-desc">Share that other customers — especially those in similar situations — have felt exactly the same way. Normalize the concern. They are not alone in having it.</p>
+    </div>
+    <div class="fff-card fff-found">
+      <div class="fff-num">3</div>
+      <div class="fff-word">Found</div>
+      <p class="fff-desc">Explain what those customers ultimately discovered: the concern resolved itself, the outcome was positive, and the decision to move forward was the right one.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="callout-l">Example in Practice</div>
+    <p><strong>Customer:</strong> "I'm worried the implementation will disrupt our business."<br><br>
+    <strong>You (Feel):</strong> "I completely understand how you feel. Implementing a new system can seem overwhelming at first, especially when you're running a busy operation."<br><br>
+    <strong>You (Felt):</strong> "Many of our clients initially felt the same way — especially those with complex operations like yours."<br><br>
+    <strong>You (Found):</strong> "What they found, however, was that our phased implementation process allowed them to stay fully operational while transitioning to Odoo gradually. They were often surprised by how smooth the process actually turned out to be."</p>
+  </div>
+
+  <div class="h3">Cost-Related Objections</div>
+  <div class="acc">
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">💵</div><div class="at">"The implementation is too expensive."</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Budget constraints or doubt about the perceived value of implementation services relative to their cost.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Focus on the long-term ROI and cost savings the implementation will provide. Odoo's subscription is approximately 7× lower than competitors' public prices — the implementation investment is often recovered within the first year through operational efficiency gains alone. Frame the cost as an investment with a measurable return, not an expense.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">📏</div><div class="at">"We can't justify the cost for a business of our size."</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Doubt that the implementation will provide sufficient ROI for a company at their scale.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Highlight the scalability of the solution and how implementation can be scoped and phased to match the business's size and budget. Encourage starting with just the essential 2–3 apps that solve their biggest pain points. It's easier to grow into the platform than to implement everything at once — and significantly less risky.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">💳</div><div class="at">"Why do we have to pay for the whole implementation before we go live?"</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Lack of trust or concern about paying upfront without seeing the full value delivered yet.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Explain the upfront costs associated with project planning, resource allocation, and BSA assignment. Work begins immediately upon payment — not at Go-Live. Hours are consumed throughout the entire project lifecycle, from analysis through post-Go-Live support. The structure protects both sides by ensuring the BSA's time is committed and available.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">📅</div><div class="at">"You said the lead time is 3 weeks. Why do we pay before we get assigned to our BSA?"</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Concern about incurring costs during the lead time before active implementation begins.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Clarify that the lead time refers to when active BSA-led work begins — but project planning and resource allocation begin immediately upon payment. Payment initiates the queue for BSA assignment. This is standard practice and protects the customer by ensuring they have a dedicated BSA waiting for them when the project kicks off.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🔄</div><div class="at">"We expect to get refunds for hours we do not use."</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Concern about paying for unused services and not receiving fair value for the investment.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>All sales are final — there are no refunds, including timesheets. Explain how hours are allocated across the project lifecycle, including post-Go-Live support. Having remaining hours after Go-Live is actually a benefit — those hours are available for the Second Deployment phase, additional training, or ongoing support. Unused hours are never truly wasted.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="h3">Timeline & Resource Objections</div>
+  <div class="acc">
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">⏱️</div><div class="at">"The implementation will take too long and disrupt our operations."</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Fear of prolonged downtime or resource strain during the transition to a new system.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Emphasize the phased implementation approach: users continue in their current system while Odoo is configured alongside it. There is no "big bang" cutover. Each phase delivers working functionality in short cycles, minimizing disruption to daily operations. The business stays operational throughout.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">👥</div><div class="at">"We don't have the internal resources to manage this project."</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Lack of a dedicated team or the internal expertise to support the transition alongside daily responsibilities.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>The BSA drives the entire implementation — the customer doesn't need a project management team. What they need is a committed SPoC who can act as the internal point of contact and champion. The BSA provides the planning, the guidance, the configuration, and the training. The SPoC provides the business knowledge and internal authority.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">📆</div><div class="at">"Our business is seasonal and we can't risk downtime during peak periods."</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Concern about the timing of the implementation conflicting with peak business periods.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>The phased approach makes scheduling flexible. Work with the customer to map out their seasonal calendar and plan Go-Live dates around peak periods. Configuration and training can happen during slower periods; Go-Live can be timed precisely. This is a planning conversation, not a blocker.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="h3">Product & Process Objections</div>
+  <div class="acc">
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🔗</div><div class="at">"What if we need to integrate with another software?"</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Fear that their current software stack won't work well with Odoo.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Discuss Odoo's native integration capabilities and available connectors. However, be clear about integration policy: Odoo does not build integrations for features already available natively in Odoo. For eCommerce, Shopify, WooCommerce, and Magento connectors are supported. For other integrations, explore whether the functionality already exists in Odoo before committing to custom connector development.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">😤</div><div class="at">"We've had a bad experience with ERP implementation in the past."</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Lingering mistrust from previous failed ERP implementations or painful transitions.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Acknowledge their past experience directly and without dismissing it — bad ERP implementations are common, and their concern is valid. More than 50% of proprietary ERP implementations fail industry-wide. Then differentiate: Odoo's 95%+ success rate exists precisely because of the QuickStart methodology, which was developed to address the exact failures that plague traditional implementations. The phased approach, the single BSA model, and the emphasis on staying standard are all direct responses to why ERP projects typically fail.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="h3">Support & Customization Objections</div>
+  <div class="acc">
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🛠️</div><div class="at">"What if we need more customization than Odoo can handle?"</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Doubt about Odoo's flexibility and adaptability to their unique business needs.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Odoo is highly flexible — the key distinction is between <em>customization</em> (configuring Odoo's existing features to fit the business, which is unlimited) and <em>custom development</em> (building entirely new functionality). The former is always available; the latter is used strategically when genuinely necessary. Most business needs that feel unique can be addressed through smart configuration, Studio, or workflow adjustments — without touching code.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🎧</div><div class="at">"What if we need post-implementation support? Do we have to keep paying?"</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Concern about being left without adequate help once the system goes live.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Odoo offers multiple layers of post-Go-Live support. Functional support (generic questions, bug reports) is available 24/5 by phone and email — and it's free. For ongoing BSA involvement — expansion phases, additional training, new module implementation — additional success pack hours can be purchased at any time. Any unused hours from the original pack are also available for post-Go-Live use.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🏭</div><div class="at">"We want a BSA who is an expert in our specific industry."</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Desire for specialized industry knowledge to ensure the solution aligns with their specific business processes.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>All BSAs have experience assessing industry-specific requirements and tailoring Odoo accordingly. More importantly, Odoo's implementation team carries synthesized best practices from thousands of successful projects across every major industry — this collective knowledge is often more valuable than individual industry experience. Additionally, App Experts with deep vertical knowledge are available to peer-review critical decisions on any project.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="h3">Market Competition Objections</div>
+  <div class="acc">
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🏆</div><div class="at">"Why should we go with Odoo directly instead of a third-party partner?"</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Doubt about whether direct Odoo implementation provides more specialized expertise or a better outcome than working with an external partner.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Working directly with Odoo provides: a dedicated BSA for the project's full duration, direct access to the QuickStart methodology developed by Odoo itself, streamlined escalation paths, and a team whose sole focus is long-term customer success on the platform. Partners serve a vital purpose for specific use cases — but for standard implementations, working directly with Odoo is faster, more accountable, and more consistent.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🙋</div><div class="at">"Our business is pretty standard. I think we can implement it ourselves."</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Underestimation of implementation complexity and the expertise required for optimal configuration, data migration, and user adoption.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Self-implementations often start well and stall. The complexity isn't in the software — Odoo is genuinely easy to use. The complexity is in mapping business processes to the right Odoo features, managing change across the organization, migrating data cleanly, and ensuring users actually adopt the system. These are the areas where expert guidance delivers the most value and where self-implementations most commonly get stuck.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="h3">Long-Term Viability Objections</div>
+  <div class="acc">
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">📈</div><div class="at">"What happens if our business outgrows the system?"</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Concern about whether Odoo can scale with the business as it grows.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Odoo is built to scale. The platform serves businesses from 5 to 50,000+ users with the same core product. New apps can be added at any time. The modular architecture means the customer starts with what they need now and expands into what they need later — without migrating to a new platform or rebuilding from scratch.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">🔒</div><div class="at">"How do we ensure our data will remain secure?"</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Fear of security breaches or data mishandling.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Odoo's cloud infrastructure includes data encryption, role-based access controls, regular security audits, and compliance with international security standards. For customers requiring specific compliance, hosting options (SaaS, Odoo.SH) can be evaluated against their requirements. Odoo's growing user base and VC investment demonstrate the company's long-term commitment to the security and reliability of the platform.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="h3">Change Management Objections</div>
+  <div class="acc">
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">😰</div><div class="at">"Our team isn't ready for such a big change. We're worried they won't adopt it."</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Resistance to change, fear of the unknown, and concern about internal pushback from staff.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Change management is a core part of Odoo's implementation methodology — not an afterthought. The phased approach, the SPoC model, the executive sponsor role, and the hands-on training model are all specifically designed to drive adoption. Users who are involved early, trained on the features that help them directly, and supported by their own SPoC champion adopt the system far more successfully than those subjected to a one-time launch event.</p>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="ah" onclick="toggleAcc(this)">
+        <div class="al"><div class="aicon">📚</div><div class="at">"Odoo is too complex for our team to use effectively."</div></div>
+        <div class="atog">+</div>
+      </div>
+      <div class="ab">
+        <div class="obj-concern">Root Concern</div>
+        <p>Concerns about the learning curve and whether staff will be able to use the system effectively.</p>
+        <div class="obj-concern">Rebuttal</div>
+        <p>Odoo is significantly simpler than traditional ERPs — this is one of its core design principles. The interface is consumer-grade in its clarity and consistency. More than 18% of SMEs have never deployed integrated management software because traditional ERPs are "too complex and too expensive." Odoo was built specifically to solve this problem. The BSA's role is to configure the system to match how the team actually works — not to force the team to work like the software.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     08 · SELLING IT
+═══════════════════════════════════════════ -->
+<div id="s8" class="section">
+  <div class="sh">
+    <div class="sh-eye">Section 08</div>
+    <div class="sh-title">Selling the Methodology</div>
+    <p class="sh-lead">The methodology isn't just how we implement — it's our biggest competitive differentiator. Understanding how to position it in a sales conversation is as important as being able to execute it on a project.</p>
+  </div>
+
+  <div class="callout">
+    <div class="callout-l">The Core Sales Truth</div>
+    <p>Odoo's #1 differentiator is <strong>transparency</strong>. Most competitors obscure their pricing, methodology, challenges, and legal terms. Odoo is openly transparent about all of them. Counterintuitively, this transparency is your most powerful closing tool — the more honest you are upfront, the greater your chances of winning the business.</p>
+  </div>
+
+  <div class="h3">Odoo's Competitive Differentiators</div>
+  <div class="dg">
+    <div class="dc"><div class="di">💵</div><div class="dl">Transparent Pricing</div><div class="dd">~7× lower than competitors' public prices. Always say "inexpensive" — never "cheap." Inexpensive signals high value for low cost.</div></div>
+    <div class="dc"><div class="di">🖥️</div><div class="dl">Demo on Day One</div><div class="dd">Free 14-day trials and demos on the very first call. Most enterprise vendors won't show the product until month three of evaluation.</div></div>
+    <div class="dc"><div class="di">📋</div><div class="dl">Open Methodology</div><div class="dd">We publish and share our implementation approach. No black box. Customers know exactly what they're buying before they sign anything.</div></div>
+    <div class="dc"><div class="di">⚡</div><div class="dl">Speed to Value</div><div class="dd">95%+ implementation success rate vs. the industry average of under 50%. What competitors take 18 months to deliver, we deliver in 3–6.</div></div>
+    <div class="dc"><div class="di">📣</div><div class="dl">Honest About Challenges</div><div class="dd">We tell customers implementation is difficult before they sign. This builds more trust than promises of an easy transition — and it protects the project.</div></div>
+  </div>
+
+  <div class="h3">The 5 Sales Commandments</div>
+  <div>
+    <div class="cmd">
+      <div class="cmd-n">01</div>
+      <div>
+        <div class="cmd-t">Start Small, Grow Big</div>
+        <div class="cmd-b">It's easier to sell 2 apps than 10. And once you've delivered 2 apps successfully, selling 10 becomes natural. Encourage customers to start with their core need and expand. Starting small reduces their risk, reduces your risk, and creates a natural long-term engagement cycle. It's also easier to sell — and faster to close.</div>
+      </div>
+    </div>
+    <div class="cmd">
+      <div class="cmd-n">02</div>
+      <div>
+        <div class="cmd-t">Control the Buying Process</div>
+        <div class="cmd-b">Know who is involved in the decision, what they need to see to be convinced, and how they perceive risk. Ask transparently — customers respect this directness. If you don't understand their buying process, you have blind spots that will cost you the deal. Qualify the buying process as aggressively as you qualify the requirements.</div>
+      </div>
+    </div>
+    <div class="cmd">
+      <div class="cmd-n">03</div>
+      <div>
+        <div class="cmd-t">Don't Let Requirements Grow Legs</div>
+        <div class="cmd-b">Start and end every call by reinforcing the customer's primary requirements. If the list becomes contaminated with unnecessary items, cut it back and refocus. Requirement creep in pre-sales kills deals — customers experience it as uncertainty and risk. The salesperson who keeps the scope focused is the one who closes.</div>
+      </div>
+    </div>
+    <div class="cmd">
+      <div class="cmd-n">04</div>
+      <div>
+        <div class="cmd-t">Sell Out-of-the-Box. Challenge Dev Requests.</div>
+        <div class="cmd-b">Inexperienced salespeople are afraid to push back on customer requests in pre-sales. But customers generally respect being challenged — it signals expertise and confidence. Every development request added pre-sale increases the customer's perceived risk and uncertainty. Remember the 80/20 rule: more than 20% development on a project is a red flag, not a feature.</div>
+      </div>
+    </div>
+    <div class="cmd">
+      <div class="cmd-n">05</div>
+      <div>
+        <div class="cmd-t">Cut Down the Number of Decision-Makers You Deal With Directly</div>
+        <div class="cmd-b">When too many people feed you requirements and dictate the agenda, you can't separate priorities from noise. This results in significant effort with little progress. Focus your communication on the actual decision-maker. More stakeholders in the conversation doesn't mean more clarity — it means more confusion, longer cycles, and a lower probability of closing.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="h3">Selling by Company Size</div>
+  <div class="g2">
+    <div class="card c-blue">
+      <div class="card-t">Small Companies</div>
+      <p class="card-b">Get them in front of the product on the first call — ideally in the very first conversation. Your goal is to show them what the standard solution does and demo the specific features they care about. Show Odoo Studio for minor customizations. Discuss ROI on the fly. The sooner you can demonstrate value, the more QuickStart projects you'll close — and close quickly.</p>
+    </div>
+    <div class="card c-teal">
+      <div class="card-t">Large Enterprises</div>
+      <p class="card-b">Same principles — demo ASAP, keep it simple — but structured in distinct stages: (1) Get them to want Odoo as a product first (RFIs, demos). (2) Only then, sell the ROI Analysis. (3) Then sell the full implementation. You're selling yourself as a business partner, not just a product. Getting software in front of them on day one of evaluation is a differentiator — most competitors won't do it.</p>
+    </div>
+  </div>
+
+  <div class="h3">What Great Salespeople Know</div>
+  <div class="g3">
+    <div class="card c-purple">
+      <div class="card-t">The Demo is the Close</div>
+      <p class="card-b">The key success factor in selling Odoo is mastering the product demo. Sales people who do 3+ demos per week consistently outperform those who don't. Master 3 generic flows first (service, manufacturing, and one other) — then adapt with experience.</p>
+    </div>
+    <div class="card c-purple">
+      <div class="card-t">Decision Makers vs. Key Users</div>
+      <p class="card-b">Decision makers want a low budget and fast delivery. Key users want more features. Your goal is to satisfy the decision maker. When requirements pile up from key users, redirect the conversation back to the primary business objectives of the person who actually signs the contract.</p>
+    </div>
+    <div class="card c-purple">
+      <div class="card-t">Complexity Kills Deals</div>
+      <p class="card-b">The #1 variable that jeopardizes any sale is complexity. Too many requirements, too many stakeholders, too many development requests, too many cooks — all of these add perceived risk. Your job is to simplify the path to "yes," not to accommodate every request on the way there.</p>
+    </div>
+  </div>
+
+  <div class="story">
+    <div class="si">
+      <span class="sq">"</span>
+      <p class="st">I set the right expectations from the very start. I explained that I will say no to any development requests unless the need is a justified must-have and there is no appropriate workaround. Doing this changed everything. The customer became genuinely open to my suggestions and we saved 100 hours of development by using standard workarounds instead.</p>
+      <div class="sa">— Audric, Project Leader, Odoo BE · on why challenging customers early wins trust later</div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:32px;">
+    <div class="callout-l">The Bottom Line</div>
+    <p>The methodology <em>is</em> the pitch. When you explain to a prospect that Odoo delivers 95%+ implementation success because we stay standard, move fast, and manage expectations honestly — while competitors charge 3–5× more and succeed less than 50% of the time — you're not describing a process. You're making a compelling argument for why they should trust you with their business. <strong>The methodology is the product. Sell it that way.</strong></p>
+  </div>
+</div>
+
+</div><!-- /.main -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <img src="https://odoocdn.com/openerp_website/static/src/img/assets/png/odoo_logo_inverted.png" alt="Odoo" class="fl">
+  <div class="ft">Odoo Implementation Playbook · Synthesized from Implementation Methodology (Nov 2020), QuickStart Documentation, QuickStart Guidelines, and Common Implementation Objections</div>
+</div>
+
+<script>
+  function show(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+    window.scrollTo({ top: document.querySelector('.nav-wrap').offsetTop - 40, behavior: 'smooth' });
+  }
+  function toggleAcc(header) {
+    const item = header.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.ai').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+</script>
+</body>
+</html>

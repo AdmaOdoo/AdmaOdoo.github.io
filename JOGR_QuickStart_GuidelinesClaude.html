@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuickStart Guidelines · Odoo</title>
+<link rel="icon" href="https://www.odoo.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple:  #714B67;
+    --purple-dk:#5a3a52;
+    --teal:    #017E84;
+    --teal-lt: #1ABC9C;
+    --blue:    #29ABE2;
+    --yellow:  #F5A623;
+    --coral:   #F06B7A;
+    --gray-bg: #F4F4F4;
+    --white:   #ffffff;
+    --text:    #2d2235;
+    --muted:   #6b5a70;
+    --border:  rgba(113,75,103,0.1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--gray-bg); color:var(--text); }
+
+  /* TOP BAR */
+  .topbar { background:var(--purple); padding:14px 48px; display:flex; align-items:center; gap:18px; box-shadow:0 2px 16px rgba(113,75,103,0.3); }
+  .topbar-logo { height:26px; }
+  .topbar-div  { width:1px; height:22px; background:rgba(255,255,255,0.3); }
+  .topbar-lbl  { font-size:13px; font-weight:500; color:rgba(255,255,255,0.7); letter-spacing:.4px; }
+
+  /* HERO */
+  .hero { background:var(--purple); padding:52px 60px 60px; position:relative; overflow:hidden; }
+  .hero::after  { content:''; position:absolute; top:-80px; right:-120px; width:480px; height:480px; border-radius:50%; background:rgba(255,255,255,0.06); pointer-events:none; }
+  .hero::before { content:''; position:absolute; bottom:-60px; left:35%; width:260px; height:260px; border-radius:50%; background:rgba(255,255,255,0.03); pointer-events:none; }
+  .hero-inner { position:relative; z-index:1; max-width:720px; }
+  .hero-tag { font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--teal-lt); margin-bottom:16px; display:block; }
+  .hero h1 { font-family:'Inter',sans-serif; font-size:clamp(30px,4vw,52px); font-weight:700; color:#fff; line-height:1.1; margin-bottom:16px; }
+  .hl { position:relative; display:inline-block; }
+  .hl svg { position:absolute; bottom:-5px; left:0; width:100%; height:9px; }
+  .hero-sub { font-size:15px; color:rgba(255,255,255,0.62); line-height:1.75; margin-bottom:40px; max-width:600px; }
+  .hero-stats { display:flex; flex-wrap:wrap; gap:0; }
+  .stat { padding-right:28px; margin-right:28px; border-right:1px solid rgba(255,255,255,0.15); }
+  .stat:last-child { border-right:none; }
+  .stat-n { font-family:'Caveat',cursive; font-size:32px; font-weight:700; color:#fff; line-height:1; display:block; }
+  .stat-l { font-size:11px; color:rgba(255,255,255,0.48); letter-spacing:.5px; margin-top:3px; }
+
+  /* NAV TABS */
+  .tabs-wrap { background:#fff; border-bottom:1px solid var(--border); box-shadow:0 1px 8px rgba(0,0,0,0.05); position:sticky; top:0; z-index:100; }
+  .tabs { display:flex; overflow-x:auto; scrollbar-width:none; max-width:1100px; margin:0 auto; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { font-family:'Inter',sans-serif; font-size:12px; font-weight:600; letter-spacing:.3px; padding:16px 22px; border:none; background:transparent; color:var(--muted); cursor:pointer; white-space:nowrap; border-bottom:3px solid transparent; transition:all .2s; }
+  .tab:hover { color:var(--purple); }
+  .tab.active { color:var(--purple); border-bottom-color:var(--purple); }
+
+  /* CONTENT */
+  .main { background:var(--gray-bg); min-height:60vh; }
+  .section { display:none; max-width:1100px; margin:0 auto; padding:48px 40px; animation:up .3s ease; }
+  .section.active { display:block; }
+  @keyframes up { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+  /* HEADERS */
+  .sh { margin-bottom:36px; }
+  .sh-eye { font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--teal); margin-bottom:8px; }
+  .sh-title { font-family:'Caveat',cursive; font-size:clamp(28px,3vw,42px); font-weight:700; color:var(--text); display:inline-block; position:relative; margin-bottom:4px; }
+  .sh-title::after { content:''; display:block; height:5px; margin-top:3px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 8'%3E%3Cpath d='M2,5 C60,1 120,7 180,4 C230,1 270,7 298,4' stroke='%23F06B7A' stroke-width='3.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") left/100% 100% no-repeat; }
+  .sh-lead { font-size:15px; color:var(--muted); max-width:660px; line-height:1.75; margin-top:10px; }
+
+  .h3 { font-family:'Caveat',cursive; font-size:20px; font-weight:700; color:var(--text); margin:32px 0 14px; display:inline-block; }
+
+  /* CARDS */
+  .card { background:#fff; border-radius:18px; padding:26px 28px; border:1px solid rgba(0,0,0,0.05); box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+  .card-t { font-family:'Caveat',cursive; font-size:18px; font-weight:700; color:var(--text); margin-bottom:10px; }
+  .card-b { font-size:14px; line-height:1.75; color:var(--muted); }
+  .c-blue   { border-left:4px solid var(--blue); }
+  .c-teal   { border-left:4px solid var(--teal-lt); }
+  .c-coral  { border-left:4px solid var(--coral); }
+  .c-gold   { border-left:4px solid var(--yellow); }
+  .c-purple { border-left:4px solid var(--purple); }
+  .g2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
+  .g3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; }
+
+  /* ALERTS */
+  .alert { border-radius:14px; padding:16px 20px; margin:16px 0; display:flex; gap:12px; align-items:flex-start; }
+  .alert.red    { background:#FEF0F1; border-left:4px solid var(--coral); }
+  .alert.yellow { background:#FFF8E7; border-left:4px solid var(--yellow); }
+  .alert.blue   { background:#EBF7FD; border-left:4px solid var(--blue); }
+  .alert.teal   { background:#E8F7F5; border-left:4px solid var(--teal-lt); }
+  .alert.purple { background:#F3EEF2; border-left:4px solid var(--purple); }
+  .alert-i { font-size:18px; flex-shrink:0; margin-top:1px; }
+  .alert-t { font-size:13.5px; line-height:1.7; }
+  .alert.red    .alert-t { color:#8a2a35; }
+  .alert.yellow .alert-t { color:#7a5c10; }
+  .alert.blue   .alert-t { color:#1a5f7a; }
+  .alert.teal   .alert-t { color:#0a5a52; }
+  .alert.purple .alert-t { color:var(--purple-dk); }
+
+  /* CALLOUT */
+  .callout { background:#fff; border-radius:18px; padding:24px 28px; border-left:5px solid var(--teal); margin:20px 0; box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+  .callout-l { font-family:'Caveat',cursive; font-size:15px; font-weight:700; color:var(--teal); margin-bottom:8px; }
+  .callout p { font-size:14px; line-height:1.8; color:var(--muted); }
+
+  /* INTERACTIVE CHECKLIST */
+  .checklist-card { background:#fff; border-radius:18px; border:1px solid rgba(0,0,0,0.05); overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+  .cl-item { display:flex; align-items:flex-start; gap:14px; padding:14px 20px; border-bottom:1px solid rgba(0,0,0,0.05); transition:background .15s; cursor:pointer; }
+  .cl-item:last-child { border-bottom:none; }
+  .cl-item:hover { background:#faf7f9; }
+  .cl-item.checked { background:#f0faf8; }
+  .cl-check { width:22px; height:22px; border-radius:7px; border:2px solid var(--border); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; transition:all .2s; font-size:13px; }
+  .cl-item.checked .cl-check { background:var(--teal-lt); border-color:var(--teal-lt); color:#fff; }
+  .cl-item.warn .cl-check  { border-color:var(--yellow); }
+  .cl-item.warn.checked .cl-check  { background:var(--yellow); border-color:var(--yellow); }
+  .cl-item.stop .cl-check  { border-color:var(--coral); }
+  .cl-item.stop.checked .cl-check  { background:var(--coral); border-color:var(--coral); }
+  .cl-text { font-size:13.5px; color:var(--muted); line-height:1.65; flex:1; }
+  .cl-item.checked .cl-text { color:var(--teal); }
+  .cl-item.warn  .cl-text { color:#7a5c10; }
+  .cl-item.stop  .cl-text { color:#8a2a35; }
+  .cl-tag { display:inline-block; font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; margin-left:8px; vertical-align:middle; }
+  .tag-must  { background:rgba(1,126,132,0.1); color:var(--teal); }
+  .tag-warn  { background:rgba(245,166,35,0.12); color:#7a5c10; }
+  .tag-stop  { background:rgba(240,107,122,0.1); color:var(--coral); }
+  .cl-progress { padding:14px 20px; background:#f8f5f8; border-top:1px solid rgba(0,0,0,0.06); display:flex; align-items:center; gap:14px; }
+  .cl-prog-bar { flex:1; height:8px; background:rgba(0,0,0,0.08); border-radius:10px; overflow:hidden; }
+  .cl-prog-fill { height:100%; background:var(--teal-lt); border-radius:10px; transition:width .3s; }
+  .cl-prog-text { font-size:12px; font-weight:600; color:var(--muted); white-space:nowrap; }
+  .cl-reset { font-size:12px; color:var(--coral); cursor:pointer; font-weight:600; border:none; background:none; font-family:'Inter',sans-serif; }
+
+  /* 80/20 BAR */
+  .ratio-wrap { margin:20px 0; }
+  .ratio-bar { background:#F0EBF0; border-radius:12px; height:52px; overflow:hidden; display:flex; }
+  .ratio-std { background:var(--teal-lt); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; width:80%; border-radius:12px 0 0 12px; gap:8px; }
+  .ratio-dev { background:var(--coral); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; width:20%; border-radius:0 12px 12px 0; }
+
+  /* REVIEW CASES */
+  .review-list { display:flex; flex-direction:column; gap:10px; }
+  .rc-item { background:#fff; border-radius:16px; border:1px solid rgba(0,0,0,0.05); overflow:hidden; box-shadow:0 1px 8px rgba(0,0,0,0.04); }
+  .rc-header { display:flex; align-items:center; gap:14px; padding:18px 22px; cursor:pointer; }
+  .rc-header:hover { background:#faf7f9; }
+  .rc-num { width:32px; height:32px; border-radius:10px; background:rgba(113,75,103,0.1); display:flex; align-items:center; justify-content:center; font-family:'Caveat',cursive; font-size:18px; font-weight:700; color:var(--purple); flex-shrink:0; }
+  .rc-title { font-size:14px; font-weight:600; color:var(--text); flex:1; }
+  .rc-toggle { font-size:20px; color:var(--purple); transition:transform .3s; }
+  .rc-item.open .rc-toggle { transform:rotate(45deg); }
+  .rc-body { display:none; padding:0 22px 22px; }
+  .rc-item.open .rc-body { display:block; }
+  .rc-body p { font-size:13.5px; color:var(--muted); line-height:1.75; margin-bottom:10px; }
+  .rc-sub { font-size:12px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--purple); margin:14px 0 6px; }
+  .rc-list { list-style:none; padding:0; }
+  .rc-list li { font-size:13px; color:var(--muted); padding:4px 0 4px 18px; position:relative; line-height:1.6; }
+  .rc-list li::before { content:'·'; position:absolute; left:4px; color:var(--purple); font-size:16px; line-height:1.3; }
+  .process-tag { display:inline-block; font-size:12px; font-weight:600; padding:4px 12px; border-radius:20px; background:rgba(1,126,132,0.1); color:var(--teal); margin-top:8px; }
+
+  /* COMPARISON TABLE */
+  .comp-table { width:100%; border-collapse:collapse; border-radius:16px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.06); margin:20px 0; }
+  .comp-table thead th { padding:18px 22px; font-family:'Caveat',cursive; font-size:20px; font-weight:700; color:#fff; text-align:left; }
+  .comp-table th:first-child  { background:var(--purple); }
+  .comp-table th:last-child   { background:var(--teal); }
+  .comp-table td { padding:14px 22px; font-size:13.5px; color:var(--muted); line-height:1.65; vertical-align:top; border-bottom:1px solid rgba(0,0,0,0.05); background:#fff; }
+  .comp-table tr:last-child td { border-bottom:none; }
+  .comp-table td:first-child { border-right:1px solid rgba(0,0,0,0.06); }
+  .badge { display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; margin-right:4px; }
+  .badge-green  { background:rgba(26,188,156,0.12); color:var(--teal); }
+  .badge-red    { background:rgba(240,107,122,0.12); color:var(--coral); }
+  .badge-gray   { background:rgba(0,0,0,0.06); color:var(--muted); }
+  .badge-purple { background:rgba(113,75,103,0.1); color:var(--purple); }
+
+  /* 3PA TABS */
+  .tpa-tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+  .tpa-tab { padding:9px 18px; border-radius:20px; border:2px solid var(--border); font-family:'Inter',sans-serif; font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; transition:all .2s; }
+  .tpa-tab:hover { border-color:var(--purple); color:var(--purple); }
+  .tpa-tab.active { background:var(--purple); border-color:var(--purple); color:#fff; }
+  .tpa-panel { display:none; }
+  .tpa-panel.active { display:block; }
+  .tpa-table { width:100%; border-collapse:collapse; border-radius:14px; overflow:hidden; box-shadow:0 1px 10px rgba(0,0,0,0.06); }
+  .tpa-table th { background:var(--purple); color:#fff; padding:12px 16px; font-size:12px; font-weight:600; text-align:left; }
+  .tpa-table td { padding:12px 16px; font-size:13px; color:var(--muted); background:#fff; border-bottom:1px solid rgba(0,0,0,0.05); line-height:1.5; vertical-align:top; }
+  .tpa-table tr:last-child td { border-bottom:none; }
+  .tpa-table td:not(:first-child) { text-align:center; }
+  .yes { color:var(--teal-lt); font-weight:700; }
+  .no  { color:var(--coral); font-weight:700; }
+  .na  { color:var(--muted); font-style:italic; }
+  .footnotes { margin-top:16px; }
+  .footnote { font-size:12px; color:var(--muted); line-height:1.7; padding:4px 0; }
+  .footnote span { color:var(--purple); font-weight:600; }
+
+  /* FOOTER */
+  .footer { background:var(--purple); text-align:center; padding:32px; margin-top:48px; }
+  .footer-logo { height:20px; opacity:.45; display:block; margin:0 auto 10px; }
+  .footer-text { font-size:12px; color:rgba(255,255,255,.32); }
+
+  @media(max-width:768px){ .topbar{padding:12px 20px;} .hero{padding:40px 24px 48px;} .section{padding:32px 20px;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <img src="https://odoocdn.com/openerp_website/static/src/img/assets/png/odoo_logo_inverted.png" alt="Odoo" class="topbar-logo">
+  <span class="topbar-div"></span>
+  <span class="topbar-lbl">Sales Enablement · QuickStart Guidelines</span>
+</div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <span class="hero-tag">Sales Enablement · Internal Reference</span>
+    <h1>QuickStart <span class="hl">Guidelines<svg viewBox="0 0 200 10" preserveAspectRatio="none"><path d="M2,7 C40,2 100,9 140,5 C165,2 185,8 198,5" stroke="#1ABC9C" stroke-width="4" fill="none" stroke-linecap="round"/></svg></span></h1>
+    <p class="hero-sub">The operational rules every salesperson must know before a deal is signed. Use the interactive checklist to qualify every project before closing.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-n">80/20</span><div class="stat-l">Standard vs. Dev Rule</div></div>
+      <div class="stat"><span class="stat-n">3</span><div class="stat-l">Case-by-Case Reviews</div></div>
+      <div class="stat"><span class="stat-n">3</span><div class="stat-l">Hosting Environments</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('t1',this)">Must-Haves</button>
+    <button class="tab" onclick="showTab('t2',this)">Review Cases</button>
+    <button class="tab" onclick="showTab('t3',this)">Success Pack vs. Partner Pack</button>
+    <button class="tab" onclick="showTab('t4',this)">3PA & LoC Policy</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══ TAB 1: MUST HAVES ═══ -->
+<div id="t1" class="section active">
+  <div class="sh">
+    <div class="sh-eye">Tab 01</div>
+    <div class="sh-title">Must-Have Requirements</div>
+    <p class="sh-lead">Every project must meet these requirements before it is sold. Check off each item as you qualify the deal. Items marked in red are non-negotiable hard stops.</p>
+  </div>
+
+  <div class="alert red">
+    <div class="alert-i">🚨</div>
+    <div class="alert-t"><strong>Non-Compliance Consequence:</strong> If a project does not meet these guidelines, the BSA Manager presents the project and its issues to the Sales Manager. The Sales Manager takes over until the project is either refunded or restarted with expectations fully aligned. There are no exceptions.</div>
+  </div>
+
+  <div class="h3" style="margin-top:24px;">Project Qualification Checklist</div>
+  <div class="checklist-card" id="checklistCard">
+
+    <div class="cl-item" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">Project meets minimum requirements displayed on the Pricing Page — check apps per pack type and type of service per pack type. <span class="cl-tag tag-must">MUST</span></div>
+    </div>
+
+    <div class="cl-item" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">Account Manager knows the pricing page's recommended project hours and proposes the minimum to the customer. <span class="cl-tag tag-must">MUST</span></div>
+    </div>
+
+    <div class="cl-item warn" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">Packs of 25 hours or less are sold with the explicit understanding that they are typically insufficient to complete a full implementation. <span class="cl-tag tag-warn">WARN</span></div>
+    </div>
+
+    <div class="cl-item" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">Sales has detailed a clear scope of what will be completed with the purchased hours — preventing scope creep and underselling. First phase = as-is essential flows. Further phases = to-be's and nice-to-haves. <span class="cl-tag tag-must">MUST</span></div>
+    </div>
+
+    <div class="cl-item" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">Customer is hosted on Odoo.sh or SaaS. This applies to all packs without exception. <span class="cl-tag tag-must">MUST</span></div>
+    </div>
+
+    <div class="cl-item" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">Odoo oversees the entire project: planning, analyzing, training the SPoC, configuring, going live, supporting post Go-Live, and developments. (Note: only training and limited configuring apply to 4-hour packs.) <span class="cl-tag tag-must">MUST</span></div>
+    </div>
+
+    <div class="cl-item stop" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">At the time of sale, there are NO formal plans to transfer to a partner or third party after Odoo's work is complete. Planning a transfer from day one is a disservice to the customer. <span class="cl-tag tag-stop">STOP</span></div>
+    </div>
+
+    <div class="cl-item" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">SPoC is identified and committed. Their required time increases in relation to BSA hours — if BSA dedicates 5 hrs, SPoC may dedicate 10 hrs. SPoC must be prepared to: learn Odoo, promote it internally, test BSA-provided flows, plan & execute end-user training, create user manuals/documentation, and work on all open BSA-assigned tasks. <span class="cl-tag tag-must">MUST</span></div>
+    </div>
+
+    <div class="cl-item stop" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">No integrations to other software for features Odoo already has. Exceptions only: Shopify, WooCommerce, Magento connectors, and SPS Commerce. <span class="cl-tag tag-stop">STOP</span></div>
+    </div>
+
+    <div class="cl-item" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">If a development is discussed or sold, the "Development FAQ" has been sent to the customer to align on Odoo's internal way of working and properly manage expectations. <span class="cl-tag tag-must">MUST</span></div>
+    </div>
+
+    <div class="cl-item" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">If custom development or advanced Studio use is anticipated, the client is on a major Odoo version or Odoo.sh. Custom developments are only deliverable on Odoo.SH. <span class="cl-tag tag-must">MUST</span></div>
+    </div>
+
+    <div class="cl-item" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">In case of conflicting information from different client employees, the BSA will carry out only what the SPoC has defined as a must-have. The SPoC's role: gather stakeholders, challenge requests, define priorities, and advocate Odoo standard features. <span class="cl-tag tag-must">MUST</span></div>
+    </div>
+
+    <div class="cl-item stop" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">All sales are final. There are no refunds (which includes timesheets). Customer has been informed. <span class="cl-tag tag-stop">STOP</span></div>
+    </div>
+
+    <div class="cl-item warn" onclick="toggleCheck(this)">
+      <div class="cl-check"></div>
+      <div class="cl-text">Current lead time has been communicated to the customer. If the customer goes on hold or abandons the project for 1+ month, they re-enter the queue at current lead time. Any transition time will be billed to the customer. <span class="cl-tag tag-warn">WARN</span></div>
+    </div>
+
+    <div class="cl-progress">
+      <div class="cl-prog-bar"><div class="cl-prog-fill" id="progFill" style="width:0%"></div></div>
+      <div class="cl-prog-text" id="progText">0 / 14 completed</div>
+      <button class="cl-reset" onclick="resetChecklist()">Reset</button>
+    </div>
+  </div>
+
+  <div class="alert blue" style="margin-top:20px;">
+    <div class="alert-i">📌</div>
+    <div class="alert-t">Familiarize yourself with these additional resources to properly qualify a project: Customization vs. Development · Basics of the QuickStart Methodology · Pre-Sales Pipe · Development Services Process and Policies</div>
+  </div>
+
+  <div class="callout" style="margin-top:8px;">
+    <div class="callout-l">Support-Only Success Packs</div>
+    <p>Success packs can also be sold for the sole purpose of dedicated support. In this case, it is <em>not</em> a QuickStart project — Odoo exclusively reacts to customer questions and does not drive the implementation. Make sure this distinction is clear to both the customer and the BSA at the time of sale.</p>
+  </div>
+</div>
+
+<!-- ═══ TAB 2: REVIEW CASES ═══ -->
+<div id="t2" class="section">
+  <div class="sh">
+    <div class="sh-eye">Tab 02</div>
+    <div class="sh-title">Case-by-Case Review</div>
+    <p class="sh-lead">These scenarios require review before the project is sold. They are not automatic disqualifiers, but they must be flagged, reviewed, and approved through the correct process.</p>
+  </div>
+
+  <div class="alert yellow">
+    <div class="alert-i">⚠️</div>
+    <div class="alert-t"><strong>Important:</strong> These cases require escalation and approval — they cannot be resolved by the AE alone. Follow the review process outlined for each case before committing anything to the customer.</div>
+  </div>
+
+  <div class="review-list" style="margin-top:24px;">
+
+    <div class="rc-item open">
+      <div class="rc-header" onclick="toggleRC(this)">
+        <div class="rc-num">1</div>
+        <div class="rc-title">Development exceeds 20% of total project hours</div>
+        <div class="rc-toggle">+</div>
+      </div>
+      <div class="rc-body">
+        <p>A project must maintain at least an 80% standard / 20% development time ratio. A 100-hour project should not include more than 20 hours of custom development.</p>
+        <div class="ratio-wrap">
+          <div class="ratio-bar">
+            <div class="ratio-std">✓ 80% Standard Work</div>
+            <div class="ratio-dev">20% Dev Max</div>
+          </div>
+        </div>
+        <div class="rc-sub">Review Process</div>
+        <ul class="rc-list">
+          <li>AE should attach a screenshot of an email to the client in the success pack task</li>
+          <li>Email must explain that the client purchased less than the recommended hours</li>
+          <li>This documentation protects both parties and ensures expectations are aligned</li>
+        </ul>
+        <span class="process-tag">📋 Document in success pack task</span>
+      </div>
+    </div>
+
+    <div class="rc-item">
+      <div class="rc-header" onclick="toggleRC(this)">
+        <div class="rc-num">2</div>
+        <div class="rc-title">Development LoC maintenance exceeds 50% of subscription MRR</div>
+        <div class="rc-toggle">+</div>
+      </div>
+      <div class="rc-body">
+        <p>If the lines-of-code (LoC) maintenance cost for custom development exceeds 50% of the customer's subscription MRR, the project requires case-by-case review.</p>
+        <div class="rc-sub">Scope of Grandfathering</div>
+        <ul class="rc-list">
+          <li>Grandfathering may be considered within reason</li>
+          <li>Front-end eCommerce developments are <strong>not</strong> within reason for grandfathering</li>
+          <li>Connector developments are <strong>not</strong> within reason for grandfathering</li>
+        </ul>
+        <div class="rc-sub">Review Process</div>
+        <ul class="rc-list">
+          <li>Follow the instructions in the Development Services document</li>
+          <li>Do not commit to the customer before review is complete</li>
+        </ul>
+        <span class="process-tag">📋 Follow Development Services process</span>
+      </div>
+    </div>
+
+    <div class="rc-item">
+      <div class="rc-header" onclick="toggleRC(this)">
+        <div class="rc-num">3</div>
+        <div class="rc-title">Client requests historical data import before Go-Live</div>
+        <div class="rc-toggle">+</div>
+      </div>
+      <div class="rc-body">
+        <p>If a client requests historical data to be imported into Odoo before going live, it must be reviewed by the Pre-Sales team or BSA Managers before being promised.</p>
+        <div class="rc-sub">What Is NOT Considered Historical Data</div>
+        <ul class="rc-list">
+          <li>Open invoices and bills for accounting go-live</li>
+          <li>Open bills for accounting go-live</li>
+          <li>Trial balances for accounting go-live</li>
+        </ul>
+        <div class="rc-sub">What IS Considered Historical Data</div>
+        <ul class="rc-list">
+          <li>Closed accounting data</li>
+          <li>Closed invoices</li>
+          <li>Order history</li>
+          <li>Any other closed records — these are difficult to import and may require development</li>
+        </ul>
+        <div class="rc-sub">Review Process</div>
+        <ul class="rc-list">
+          <li>AE should ping MAC, SLO, or APT for approval on the pre-sale ticket</li>
+          <li>Do not promise historical data import without Pre-Sales or BSA Manager sign-off</li>
+        </ul>
+        <span class="process-tag">📋 Ping MAC / SLO / APT on presale ticket</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ TAB 3: SUCCESS VS PARTNER ═══ -->
+<div id="t3" class="section">
+  <div class="sh">
+    <div class="sh-eye">Tab 03</div>
+    <div class="sh-title">Success Pack vs. Partner Pack</div>
+    <p class="sh-lead">Two distinct service models with fundamentally different responsibilities. Confusing them during a sale creates real problems downstream. Know the difference before any customer conversation.</p>
+  </div>
+
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th>✦ Success Pack (Direct Odoo)</th>
+        <th>◈ Partner Pack</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-purple">Odoo leads</span> the implementation and is fully responsible for project success</td>
+        <td><span class="badge badge-gray">Partner leads</span> the implementation; Odoo is not responsible for project success</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-green">Proactive</span> — BSA defines an implementation plan and follows up regularly with the customer throughout the project</td>
+        <td><span class="badge badge-gray">Reactive</span> — Odoo answers when the partner contacts them; no implementation planning is provided by Odoo</td>
+      </tr>
+      <tr>
+        <td>QuickStart methodology applied consistently to every project</td>
+        <td>No specific methodology — partner follows their own approach (OIM mindset is recommended)</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-green">Can say no</span> to a dev request. Client must pay LoC maintenance for all developments.</td>
+        <td><span class="badge badge-gray">Cannot decline</span> dev requests (except certain third-party integration requirements). No maintenance fee — but partner is responsible for all bug fixes and code upgrades.</td>
+      </tr>
+      <tr>
+        <td>Dedicated BSA assigned to the project for its full duration</td>
+        <td>Different BSA assigned per request via ticketing system (partnerus@mail.odoo.com)</td>
+      </tr>
+      <tr>
+        <td>SaaS and Odoo.SH implementations</td>
+        <td>SaaS, Odoo.SH, and limited support for On-Premise implementations</td>
+      </tr>
+      <tr>
+        <td>Expires in <strong>1 year</strong></td>
+        <td>Does <strong>not</strong> expire</td>
+      </tr>
+      <tr>
+        <td>Sold by DS and CS to end-customers, or by PR & AM when a partner is shadowing the implementation for learning purposes</td>
+        <td>Sold by AM or PR to official and ready partners only</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert purple" style="margin-top:8px;">
+    <div class="alert-i">💡</div>
+    <div class="alert-t">Partners serve a vital purpose for specific use cases — but they are <em>not</em> necessary for most projects. For standard QuickStart implementations, working directly with Odoo via a Success Pack is faster, more accountable, and more consistent. Lead with the Success Pack when it's the right fit — which it usually is.</div>
+  </div>
+</div>
+
+<!-- ═══ TAB 4: 3PA POLICY ═══ -->
+<div id="t4" class="section">
+  <div class="sh">
+    <div class="sh-eye">Tab 04</div>
+    <div class="sh-title">LoC Maintenance, Support & 3PA Policy</div>
+    <p class="sh-lead">The hosting environment determines what third-party apps are allowed and what Odoo will support. Select a hosting type below to see the full policy. This has a direct impact on what can be promised during the sale.</p>
+  </div>
+
+  <div class="callout">
+    <div class="callout-l">Key Principle</div>
+    <p>Odoo SH with a client-owned repository requires a very technical client or a handoff to a partner. Always confirm hosting type and technical capability before committing to any third-party app support.</p>
+  </div>
+
+  <div class="tpa-tabs">
+    <button class="tpa-tab active" onclick="showTPA('tpa-sh-odoo',this)">☁️ Odoo.SH — Odoo-Owned Repo</button>
+    <button class="tpa-tab" onclick="showTPA('tpa-sh-client',this)">🔧 Odoo.SH — Client-Owned Repo</button>
+    <button class="tpa-tab" onclick="showTPA('tpa-saas',this)">🌐 SaaS</button>
+  </div>
+
+  <!-- SH ODOO OWNED -->
+  <div id="tpa-sh-odoo" class="tpa-panel active">
+    <div class="alert teal" style="margin-bottom:16px;">
+      <div class="alert-i">ℹ️</div>
+      <div class="alert-t"><strong>Odoo.SH — Odoo-Owned Repository:</strong> Standard hosting for most QuickStart projects requiring custom development. Odoo owns and maintains the repository.</div>
+    </div>
+    <table class="tpa-table">
+      <thead>
+        <tr>
+          <th>Type of Third-Party App (3PA)</th>
+          <th>Allowed on DB?</th>
+          <th>LoC Maintenance Required?</th>
+          <th>Odoo Devs Bug-Fix & Upgrade?</th>
+          <th>BSA Install & Ongoing Support?</th>
+          <th>BSA Continue Implementation?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Outside connectors (installing Odoo App on Shopify, WooCommerce, HubSpot)</td>
+          <td class="na">N/A **</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+          <td class="na">—</td>
+          <td class="na">—</td>
+        </tr>
+        <tr>
+          <td>eCommerce Connector for Shopify, WooCommerce, or Magento *</td>
+          <td class="yes">Yes</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+        </tr>
+        <tr>
+          <td>3PA approved through code review</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+          <td class="yes">Yes</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+        </tr>
+        <tr>
+          <td>3PA rejected through code review</td>
+          <td class="no">No</td>
+          <td class="na">N/A</td>
+          <td class="na">—</td>
+          <td class="na">—</td>
+          <td class="na">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SH CLIENT OWNED -->
+  <div id="tpa-sh-client" class="tpa-panel">
+    <div class="alert yellow" style="margin-bottom:16px;">
+      <div class="alert-i">⚠️</div>
+      <div class="alert-t"><strong>Odoo.SH — Client-Owned Repository:</strong> Most permissive but most technically demanding. Requires a very technical client — or passing to a partner. BSA cannot provide ongoing 3PA support regardless of code review status.</div>
+    </div>
+    <table class="tpa-table">
+      <thead>
+        <tr>
+          <th>Type of Third-Party App (3PA)</th>
+          <th>Allowed on DB?</th>
+          <th>LoC Maintenance Required?</th>
+          <th>Odoo Devs Bug-Fix & Upgrade?</th>
+          <th>BSA Install & Ongoing Support?</th>
+          <th>BSA Continue Implementation?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Outside connectors (installing Odoo App on Shopify, WooCommerce, HubSpot)</td>
+          <td class="na">N/A **</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+          <td class="na">—</td>
+          <td class="na">—</td>
+        </tr>
+        <tr>
+          <td>eCommerce Connector for Shopify, WooCommerce, or Magento *</td>
+          <td class="yes">Yes</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+        </tr>
+        <tr>
+          <td>Any 3PA, regardless of code review</td>
+          <td class="yes">Yes</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SAAS -->
+  <div id="tpa-saas" class="tpa-panel">
+    <div class="alert red" style="margin-bottom:16px;">
+      <div class="alert-i">🚫</div>
+      <div class="alert-t"><strong>SaaS:</strong> Most restrictive environment. Third-party apps installed on Odoo are not allowed on SaaS. Custom development cannot be delivered on SaaS. Only outside connectors (apps installed on external systems, not on Odoo itself) are permissible.</div>
+    </div>
+    <table class="tpa-table">
+      <thead>
+        <tr>
+          <th>Type of Third-Party App (3PA)</th>
+          <th>Allowed on DB?</th>
+          <th>LoC Maintenance Required?</th>
+          <th>Odoo Devs Bug-Fix & Upgrade?</th>
+          <th>BSA Install & Ongoing Support?</th>
+          <th>BSA Continue Implementation?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Outside connectors (installing Odoo App on Shopify, WooCommerce, HubSpot)</td>
+          <td class="na">N/A **</td>
+          <td class="no">No</td>
+          <td class="yes">Yes</td>
+          <td class="na">—</td>
+          <td class="na">—</td>
+        </tr>
+        <tr>
+          <td>eCommerce Connector for Shopify, WooCommerce, or Magento *</td>
+          <td class="no">No</td>
+          <td class="na">N/A</td>
+          <td class="na">—</td>
+          <td class="na">—</td>
+          <td class="na">—</td>
+        </tr>
+        <tr>
+          <td>Any 3PA, regardless of code review</td>
+          <td class="no">No</td>
+          <td class="na">N/A</td>
+          <td class="na">—</td>
+          <td class="na">—</td>
+          <td class="na">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footnotes" style="margin-top:20px;">
+    <div class="footnote"><span>*</span> Links here are for example — other apps that connect to those three specific eCommerce platforms fall into this category.</div>
+    <div class="footnote"><span>**</span> Outside connectors install an "Odoo App" on an outside system (e.g., an app gets installed on Shopify). Since the app is not being installed on Odoo, our 3PA policy does not apply. Note: outside connectors require Odoo's External API and will require the custom plan.</div>
+    <div class="footnote"><span>***</span> BSA involvement may differ based on office. Always check with your Team Lead.</div>
+  </div>
+
+  <div class="alert blue" style="margin-top:16px;">
+    <div class="alert-i">📌</div>
+    <div class="alert-t"><strong>Custom Development Hosting Rule:</strong> Custom developments are only deliverable on Odoo.SH. If Studio will be used in an advanced way (calculated fields, automated actions, report customizations) or if custom development is anticipated, the client must be on a major version of Odoo or Odoo.SH before the project starts. Confirm this before closing the deal.</div>
+  </div>
+</div>
+
+</div><!-- /.main -->
+
+<div class="footer">
+  <img src="https://odoocdn.com/openerp_website/static/src/img/assets/png/odoo_logo_inverted.png" alt="Odoo" class="footer-logo">
+  <div class="footer-text">QuickStart Guidelines · Odoo Sales Enablement</div>
+</div>
+
+<script>
+  // TAB NAVIGATION
+  function showTab(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+    window.scrollTo({ top: document.querySelector('.tabs-wrap').offsetTop - 40, behavior: 'smooth' });
+  }
+
+  // 3PA PANEL TABS
+  function showTPA(id, btn) {
+    document.querySelectorAll('.tpa-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tpa-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // REVIEW CASE ACCORDION
+  function toggleRC(header) {
+    const item = header.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.rc-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // INTERACTIVE CHECKLIST
+  function toggleCheck(item) {
+    item.classList.toggle('checked');
+    if (item.classList.contains('checked')) {
+      item.querySelector('.cl-check').textContent = '✓';
+    } else {
+      item.querySelector('.cl-check').textContent = '';
+    }
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const items = document.querySelectorAll('.cl-item:not(.cl-progress)');
+    const checked = document.querySelectorAll('.cl-item.checked:not(.cl-progress)').length;
+    const total = items.length;
+    const pct = Math.round((checked / total) * 100);
+    document.getElementById('progFill').style.width = pct + '%';
+    document.getElementById('progText').textContent = checked + ' / ' + total + ' completed';
+  }
+
+  function resetChecklist() {
+    document.querySelectorAll('.cl-item.checked').forEach(item => {
+      item.classList.remove('checked');
+      item.querySelector('.cl-check').textContent = '';
+    });
+    updateProgress();
+  }
+</script>
+</body>
+</html>
