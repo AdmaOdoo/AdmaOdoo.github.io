@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odoo Implementation Playbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --odoo-purple: #714B67;
+    --odoo-dark: #1a1025;
+    --odoo-mid: #2d1f3d;
+    --odoo-accent: #00a09d;
+    --odoo-gold: #e8a838;
+    --odoo-light: #f5f0f8;
+    --text-main: #1a1025;
+    --text-muted: #6b5a7a;
+    --border: rgba(113,75,103,0.15);
+    --card-bg: #ffffff;
+    --section-bg: #faf7fc;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--odoo-dark);
+    color: var(--text-main);
+    min-height: 100vh;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--odoo-dark);
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 50%, rgba(113,75,103,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 20%, rgba(0,160,157,0.2) 0%, transparent 60%);
+    padding: 80px 60px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    border: 1px solid rgba(113,75,103,0.2);
+    animation: rotate 30s linear infinite;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,160,157,0.15);
+    animation: rotate 20s linear infinite reverse;
+  }
+
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--odoo-accent);
+    border: 1px solid rgba(0,160,157,0.4);
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 28px;
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.05;
+    max-width: 700px;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 span {
+    color: var(--odoo-accent);
+  }
+
+  .hero-sub {
+    color: rgba(255,255,255,0.55);
+    font-size: 17px;
+    font-weight: 300;
+    max-width: 540px;
+    line-height: 1.7;
+    margin-bottom: 48px;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    border-left: 2px solid var(--odoo-purple);
+    padding-left: 16px;
+  }
+
+  .stat-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  /* ── NAV ── */
+  .nav-wrapper {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+  }
+
+  .nav {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+
+  .nav-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 18px 24px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+    position: relative;
+  }
+
+  .nav-btn:hover { color: var(--odoo-purple); }
+
+  .nav-btn.active {
+    color: var(--odoo-purple);
+    border-bottom-color: var(--odoo-purple);
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    background: var(--section-bg);
+    min-height: 100vh;
+  }
+
+  .section {
+    display: none;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 40px;
+    animation: fadeUp 0.4s ease;
+  }
+
+  .section.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    margin-bottom: 48px;
+  }
+
+  .section-eyebrow {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--odoo-accent);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 3vw, 42px);
+    font-weight: 800;
+    color: var(--odoo-dark);
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .section-lead {
+    font-size: 17px;
+    font-weight: 300;
+    color: var(--text-muted);
+    max-width: 680px;
+    line-height: 1.75;
+  }
+
+  /* ── GRID LAYOUTS ── */
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 32px;
+    border: 1px solid var(--border);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(113,75,103,0.12);
+  }
+
+  .card-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    color: rgba(113,75,103,0.1);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--odoo-dark);
+    margin-bottom: 10px;
+  }
+
+  .card-body {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text-muted);
+  }
+
+  .card-accent {
+    border-left: 4px solid var(--odoo-purple);
+  }
+
+  .card-teal {
+    border-left: 4px solid var(--odoo-accent);
+  }
+
+  .card-gold {
+    border-left: 4px solid var(--odoo-gold);
+  }
+
+  /* ── PRINCIPLE CARDS ── */
+  .principle-card {
+    background: var(--odoo-dark);
+    border-radius: 16px;
+    padding: 36px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .principle-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+  }
+
+  .principle-icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+
+  .principle-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #fff;
+  }
+
+  .principle-body {
+    font-size: 14px;
+    line-height: 1.75;
+    color: rgba(255,255,255,0.6);
+  }
+
+  /* ── STORY CARDS ── */
+  .story-card {
+    background: linear-gradient(135deg, var(--odoo-mid) 0%, var(--odoo-dark) 100%);
+    border-radius: 16px;
+    padding: 36px;
+    color: #fff;
+    position: relative;
+    border: 1px solid rgba(113,75,103,0.3);
+  }
+
+  .story-quote {
+    font-size: 56px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    color: var(--odoo-accent);
+    line-height: 0.7;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .story-text {
+    font-size: 15px;
+    line-height: 1.8;
+    color: rgba(255,255,255,0.8);
+    font-style: italic;
+    margin-bottom: 20px;
+  }
+
+  .story-author {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--odoo-gold);
+    text-transform: uppercase;
+  }
+
+  /* ── PHASE TIMELINE ── */
+  .timeline {
+    position: relative;
+    padding-left: 0;
+  }
+
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 32px;
+    margin-bottom: 8px;
+    align-items: start;
+  }
+
+  .timeline-left {
+    text-align: right;
+    padding-top: 28px;
+  }
+
+  .timeline-phase-pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--odoo-purple);
+    display: block;
+  }
+
+  .timeline-phase-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .timeline-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 28px;
+    padding-right: 32px;
+  }
+
+  .timeline-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--odoo-purple);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px var(--odoo-purple);
+    flex-shrink: 0;
+  }
+
+  .timeline-connector {
+    width: 2px;
+    flex: 1;
+    min-height: 60px;
+    background: linear-gradient(to bottom, var(--odoo-purple), rgba(113,75,103,0.2));
+    margin-top: 6px;
+  }
+
+  .timeline-content {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 28px 32px;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  .phase-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--odoo-dark);
+    margin-bottom: 8px;
+  }
+
+  .phase-goal {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--odoo-accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+  }
+
+  .phase-body {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .tip-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .tip-list li {
+    font-size: 14px;
+    color: var(--text-muted);
+    padding: 6px 0 6px 20px;
+    position: relative;
+    line-height: 1.6;
+  }
+
+  .tip-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--odoo-purple);
+    font-weight: 600;
+  }
+
+  /* ── CYCLE DIAGRAM ── */
+  .cycle-wrapper {
+    background: var(--odoo-dark);
+    border-radius: 20px;
+    padding: 48px;
+    margin: 40px 0;
+    position: relative;
+  }
+
+  .cycle-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .cycle-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .cycle-step {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+  }
+
+  .cycle-step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--odoo-accent);
+    margin-bottom: 8px;
+  }
+
+  .cycle-step-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .cycle-step-desc {
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+  }
+
+  /* ── ROLE CARDS ── */
+  .role-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  .role-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .role-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--role-color, var(--odoo-purple));
+  }
+
+  .role-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 16px;
+    background: var(--role-bg, rgba(113,75,103,0.1));
+  }
+
+  .role-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--odoo-dark);
+    margin-bottom: 6px;
+  }
+
+  .role-subtitle {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--role-color, var(--odoo-accent));
+    margin-bottom: 12px;
+  }
+
+  .role-bullets {
+    list-style: none;
+    padding: 0;
+  }
+
+  .role-bullets li {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 4px 0;
+    padding-left: 14px;
+    position: relative;
+    line-height: 1.5;
+  }
+
+  .role-bullets li::before {
+    content: '·';
+    position: absolute;
+    left: 4px;
+    color: var(--role-color, var(--odoo-purple));
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  /* ── CHALLENGE ACCORDION ── */
+  .accordion-item {
+    background: var(--card-bg);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+
+  .accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 28px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .accordion-header:hover { background: var(--odoo-light); }
+
+  .accordion-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .accordion-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(113,75,103,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .accordion-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--odoo-dark);
+  }
+
+  .accordion-toggle {
+    font-size: 20px;
+    color: var(--odoo-purple);
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+
+  .accordion-item.open .accordion-toggle { transform: rotate(45deg); }
+
+  .accordion-body {
+    display: none;
+    padding: 0 28px 28px;
+  }
+
+  .accordion-item.open .accordion-body { display: block; }
+
+  .accordion-body p {
+    font-size: 14.5px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    margin-bottom: 16px;
+  }
+
+  .tactic {
+    background: var(--section-bg);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 10px;
+    border-left: 3px solid var(--odoo-accent);
+  }
+
+  .tactic-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--odoo-accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .tactic-text {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  /* ── SALES SECTION ── */
+  .commandment-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 30px;
+    border: 1px solid var(--border);
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .commandment-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--odoo-purple);
+    opacity: 0.3;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 48px;
+  }
+
+  .commandment-content .commandment-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--odoo-dark);
+    margin-bottom: 8px;
+  }
+
+  .commandment-content .commandment-body {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.75;
+  }
+
+  /* ── DIFFERENTIATOR ── */
+  .diff-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 32px;
+  }
+
+  .diff-card {
+    background: var(--odoo-dark);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid rgba(113,75,103,0.3);
+  }
+
+  .diff-icon { font-size: 28px; margin-bottom: 12px; }
+
+  .diff-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  .diff-desc {
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.6;
+  }
+
+  /* ── HIGHLIGHT BOX ── */
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(0,160,157,0.08), rgba(113,75,103,0.06));
+    border: 1px solid rgba(0,160,157,0.2);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 32px 0;
+  }
+
+  .highlight-box-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--odoo-accent);
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .highlight-box p {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text-muted);
+  }
+
+  /* ── WARNING BOX ── */
+  .warning-box {
+    background: rgba(232,168,56,0.08);
+    border: 1px solid rgba(232,168,56,0.3);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 20px 0;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .warning-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
+  .warning-text {
+    font-size: 14px;
+    color: #8a6828;
+    line-height: 1.7;
+  }
+
+  /* ── KPI BAR ── */
+  .kpi-bar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 32px 0;
+  }
+
+  .kpi-item {
+    flex: 1;
+    min-width: 140px;
+    background: var(--odoo-dark);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .kpi-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--odoo-accent);
+  }
+
+  .kpi-desc {
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 40px 0;
+  }
+
+  .h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--odoo-dark);
+    margin-bottom: 20px;
+    margin-top: 40px;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    background: var(--odoo-dark);
+    text-align: center;
+    padding: 40px;
+    color: rgba(255,255,255,0.3);
+    font-size: 13px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .hero { padding: 48px 24px 40px; }
+    .section { padding: 40px 20px; }
+    .timeline-item { grid-template-columns: 60px 1fr; gap: 16px; }
+    .timeline-phase-pct { font-size: 18px; }
+    .cycle-steps { grid-template-columns: 1fr; }
+    .hero-stats { gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-tag">Internal Playbook · Confidential</div>
+  <h1>The Odoo Implementation <span>Playbook</span></h1>
+  <p class="hero-sub">Everything you need to understand, execute, and sell Odoo's implementation methodology — distilled from 70 pages of field-tested knowledge into one living reference.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-number">95%+</div>
+      <div class="stat-label">Successful Implementations</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">3</div>
+      <div class="stat-label">Core Principles</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">5</div>
+      <div class="stat-label">Implementation Phases</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">7×</div>
+      <div class="stat-label">Easier to Upsell Existing Customers</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── NAV ── -->
+<div class="nav-wrapper">
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showSection('philosophy')">01 · Philosophy</button>
+    <button class="nav-btn" onclick="showSection('roles')">02 · Roles</button>
+    <button class="nav-btn" onclick="showSection('phases')">03 · Phases</button>
+    <button class="nav-btn" onclick="showSection('process')">04 · Process Cycle</button>
+    <button class="nav-btn" onclick="showSection('challenges')">05 · Challenges</button>
+    <button class="nav-btn" onclick="showSection('sales')">06 · Selling It</button>
+  </nav>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- ═══ 01 PHILOSOPHY ═══ -->
+  <div id="philosophy" class="section active">
+    <div class="section-header">
+      <div class="section-eyebrow">Section 01</div>
+      <h2 class="section-title">The Philosophy</h2>
+      <p class="section-lead">Before touching a single configuration, you need to internalize what Odoo actually believes about implementation. This is the "why" that governs every decision on every project.</p>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">The One-Sentence Version</div>
+      <p>A project is successful when it goes live <strong>on time and on budget</strong> — everything else, including customer satisfaction during the project, custom features, and early upsells, is secondary.</p>
+    </div>
+
+    <div class="h3">The 3 QuickStart Principles</div>
+    <div class="grid-3">
+      <div class="principle-card">
+        <div class="principle-icon">📦</div>
+        <div class="principle-title">Stay Standard</div>
+        <p class="principle-body">Odoo offers wide customization options — but every deviation from standard increases complexity exponentially, not linearly. The goal is to adapt the customer's process to Odoo, not Odoo to the customer's process.</p>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon">⚡</div>
+        <div class="principle-title">Deliver Fast</div>
+        <p class="principle-body">Prioritizing speed over customization keeps projects on schedule and reduces risk. A fast Go-Live creates momentum. The longer a project drags, the more it costs, and the more that can go wrong.</p>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon">💰</div>
+        <div class="principle-title">Keep It Affordable</div>
+        <p class="principle-body">Tailor-made solutions dramatically increase project costs — both upfront and ongoing. Custom development carries ~25% annual maintenance cost. Affordable projects win more business and generate loyalty.</p>
+      </div>
+    </div>
+
+    <div class="h3">What Is — and Isn't — a Priority</div>
+    <div class="grid-2">
+      <div class="card card-teal">
+        <div class="card-title">✅ What Actually Matters</div>
+        <p class="card-body">Getting users onto Odoo <strong>on time and within budget</strong> is the only real measure of success. Budget overruns and timeline slippage are the two reasons projects fail — full stop. A delivered, imperfect system beats a delayed, perfect one every time.</p>
+      </div>
+      <div class="card card-accent" style="--card-accent: #e8a838; border-left-color: var(--odoo-gold);">
+        <div class="card-title">❌ Common Traps to Avoid</div>
+        <ul class="tip-list">
+          <li>Custom development as a priority before Go-Live</li>
+          <li>Using customer satisfaction as your KPI mid-project</li>
+          <li>Upselling services before the project goes live</li>
+          <li>Importing full data history when master data suffices</li>
+          <li>Writing documentation for the customer instead of training them</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="h3">Why Customer Satisfaction Isn't the Goal (During Implementation)</div>
+    <div class="card card-accent" style="margin-bottom: 24px;">
+      <p class="card-body">Customer satisfaction fluctuates constantly throughout a project. Key-users want more features; the CEO wants it on time and on budget — these are different, often conflicting goals. A Project Leader who optimizes for satisfaction mid-project risks losing the project itself. Temporary dissatisfaction — from a tough conversation or a refused feature — is far better than a missed deadline. We use periodic ratings to identify customers who need more attention, not to grade Project Leaders.</p>
+    </div>
+
+    <div class="h3">The Long Game on Upselling</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Why We Don't Upsell Before Go-Live</div>
+        <p class="card-body">Every time you upsell before Go-Live, you weaken the customer's trust. They may think twice before buying services in the future. A failed or bloated first project destroys the relationship that makes long-term revenue possible.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">The Better Strategy</div>
+        <p class="card-body">Deliver fast. Build trust. Then upsell from a position of strength. It's 7× easier to sell to an existing happy customer than to acquire a new one. Phase non-essential features after Go-Live — this protects margins and creates natural future engagement.</p>
+      </div>
+    </div>
+
+    <div class="story-card" style="margin-top: 40px;">
+      <span class="story-quote">"</span>
+      <p class="story-text">During the first 3 months, I didn't like working with Frédéric. He was constantly questioning everything I asked for, to the point that I had the feeling I was wasting my time. But later on, I understood it was for the good of the project. He often found better solutions than what I asked for. Now, even though we are in production, every time I have a business decision to make on a process, I call him first to get his advice.</p>
+      <div class="story-author">— Customer Feedback · Shared by Fabien, Odoo Founder</div>
+    </div>
+  </div>
+
+  <!-- ═══ 02 ROLES ═══ -->
+  <div id="roles" class="section">
+    <div class="section-header">
+      <div class="section-eyebrow">Section 02</div>
+      <h2 class="section-title">Roles & Responsibilities</h2>
+      <p class="section-lead">Traditional ERPs separate Project Manager, Business Analyst, and Product Expert into different people. Odoo collapses these into one — the Project Leader — because splitting them creates inefficient decisions.</p>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">Core Principle: Fewer People, Faster Decisions</div>
+      <p>Odoo is simpler than traditional ERPs — simple enough that one person can understand both the business and the product simultaneously. This is a structural competitive advantage. Too many cooks spoil the broth.</p>
+    </div>
+
+    <div class="h3">The Odoo Team</div>
+    <div class="role-grid">
+      <div class="role-card" style="--role-color: #714B67; --role-bg: rgba(113,75,103,0.1);">
+        <div class="role-icon">👤</div>
+        <div class="role-name">Project Leader</div>
+        <div class="role-subtitle">PM + Business Analyst + Product Expert</div>
+        <ul class="role-bullets">
+          <li>Defines and follows the project plan</li>
+          <li>Challenges customer demands</li>
+          <li>Configures Odoo directly</li>
+          <li>Manages the SPoC relationship</li>
+          <li>Writes specifications for any dev</li>
+          <li>Manages data migration</li>
+        </ul>
+      </div>
+      <div class="role-card" style="--role-color: #00a09d; --role-bg: rgba(0,160,157,0.1);">
+        <div class="role-icon">🎯</div>
+        <div class="role-name">Project Director</div>
+        <div class="role-subtitle">On Large or Political Projects Only</div>
+        <ul class="role-bullets">
+          <li>Manages executive expectations</li>
+          <li>Reports to steering committees</li>
+          <li>Tracks project efficiency from above</li>
+          <li>Does NOT work full-time on the project</li>
+          <li>On small projects, PL does this role</li>
+        </ul>
+      </div>
+      <div class="role-card" style="--role-color: #e8a838; --role-bg: rgba(232,168,56,0.1);">
+        <div class="role-icon">🔬</div>
+        <div class="role-name">App Expert</div>
+        <div class="role-subtitle">Finance, Inventory, Mfg, etc.</div>
+        <ul class="role-bullets">
+          <li>Deep functional + industry knowledge</li>
+          <li>Not on the project full-time</li>
+          <li>Does peer reviews at critical steps</li>
+          <li>Especially involved in GAP Analysis</li>
+          <li>Makes tough calls without bias</li>
+        </ul>
+      </div>
+      <div class="role-card" style="--role-color: #5c6bc0; --role-bg: rgba(92,107,192,0.1);">
+        <div class="role-icon">⚙️</div>
+        <div class="role-name">Developer</div>
+        <div class="role-subtitle">Only If Genuinely Needed</div>
+        <ul class="role-bullets">
+          <li>Most small companies don't need one</li>
+          <li>Involved only for justified custom dev</li>
+          <li>Responsible for automated tests</li>
+          <li>Works from PL-written specifications</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="h3">The Customer Team</div>
+    <div class="role-grid">
+      <div class="role-card" style="--role-color: #714B67; --role-bg: rgba(113,75,103,0.08);">
+        <div class="role-icon">⭐</div>
+        <div class="role-name">SPoC</div>
+        <div class="role-subtitle">Single Point of Contact · Most Critical Role</div>
+        <ul class="role-bullets">
+          <li>The PL's primary counterpart</li>
+          <li>Has authority to make decisions</li>
+          <li>Gathers and assesses requirements</li>
+          <li>Becomes internal Odoo champion</li>
+          <li>Trains end-users with PL support</li>
+          <li>Must be available and empowered</li>
+        </ul>
+      </div>
+      <div class="role-card" style="--role-color: #00a09d; --role-bg: rgba(0,160,157,0.08);">
+        <div class="role-icon">👥</div>
+        <div class="role-name">Key Users</div>
+        <div class="role-subtitle">Domain Experts (Large Projects)</div>
+        <ul class="role-bullets">
+          <li>Help SPoC define requirements by dept.</li>
+          <li>Test and validate deliverables</li>
+          <li>First to be trained</li>
+          <li>Should be deeply involved early on</li>
+        </ul>
+      </div>
+      <div class="role-card" style="--role-color: #e8a838; --role-bg: rgba(232,168,56,0.08);">
+        <div class="role-icon">🏛️</div>
+        <div class="role-name">Sponsor / Steering Committee</div>
+        <div class="role-subtitle">CEO / CFO · Decision Authority</div>
+        <ul class="role-bullets">
+          <li>Pays for the project</li>
+          <li>High-level objectives only</li>
+          <li>Must visibly support the project</li>
+          <li>Critical during resistance phases</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="warning-box" style="margin-top: 32px;">
+      <div class="warning-icon">⚠️</div>
+      <div class="warning-text"><strong>The SPoC Must Have Authority.</strong> A SPoC without decision-making power is one of the top causes of project failure. If every decision needs validation from someone above the SPoC, the project will grind to a halt. Before the project starts, confirm who your SPoC is and that they have genuine authority to move forward without additional approvals.</div>
+    </div>
+
+    <div class="story-card" style="margin-top: 32px;">
+      <span class="story-quote">"</span>
+      <p class="story-text">The first implementation went very well — full scope into production in a few months, due to great collaboration with the SPoC. The second was a nightmare. The CEO acted as SPoC but was unavailable. Every decision needed CEO validation, adding days to the process. Just by improving the decision-making process, we increased efficiency dramatically.</p>
+      <div class="story-author">— Benjamin, Project Leader, Odoo BE</div>
+    </div>
+  </div>
+
+  <!-- ═══ 03 PHASES ═══ -->
+  <div id="phases" class="section">
+    <div class="section-header">
+      <div class="section-eyebrow">Section 03</div>
+      <h2 class="section-title">Implementation Phases</h2>
+      <p class="section-lead">Every Odoo project follows the same five-phase structure. The percentages represent time allocation — they are guardrails, not rules, but violating them consistently leads to project failure.</p>
+    </div>
+
+    <div class="kpi-bar">
+      <div class="kpi-item">
+        <div class="kpi-val">10%</div>
+        <div class="kpi-desc">ROI Analysis</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-val">5%</div>
+        <div class="kpi-desc">Kick-Off</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-val">80%</div>
+        <div class="kpi-desc">Implementation</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-val">5%</div>
+        <div class="kpi-desc">Go-Live</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-val">∞</div>
+        <div class="kpi-desc">Second Deployment</div>
+      </div>
+    </div>
+
+    <div class="timeline">
+
+      <!-- ROI ANALYSIS -->
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <span class="timeline-phase-pct">10%</span>
+          <span class="timeline-phase-label">of project</span>
+        </div>
+        <div>
+          <div class="timeline-content">
+            <div class="phase-name">Phase 1 · ROI Analysis</div>
+            <div class="phase-goal">Goal: Validate feasibility, define scope & budget</div>
+            <p class="phase-body">For larger projects, sold before the customer commits to the full project. Ranges from 3 days to 50 days depending on complexity. On very small projects, performed during Kick-Off. This is where the Project Leader is still a <em>salesperson</em> — the project isn't won yet.</p>
+            <div class="card-title" style="font-size: 14px; margin-bottom: 10px; margin-top: 16px;">What Gets Delivered</div>
+            <ul class="tip-list">
+              <li>Analysis of savings and benefits (Returns)</li>
+              <li>Budget and implementation plan (Investments)</li>
+              <li>Mapping of business needs to product features</li>
+              <li>Proof of concept demos of key business flows</li>
+              <li>Change management strategy</li>
+            </ul>
+            <div class="card-title" style="font-size: 14px; margin-bottom: 10px; margin-top: 20px;">Key Tips During This Phase</div>
+            <ul class="tip-list">
+              <li>Be a salesperson — reassure and motivate, do live demos</li>
+              <li>Observe how they currently work (don't just ask future goals)</li>
+              <li>Never present multiple options — propose one best solution</li>
+              <li>Classify items as "optional" yourself; don't let customers decide</li>
+              <li>Peer-review with an App Expert before presenting results</li>
+              <li>All development must be classified as: must-have before Go-Live OR deployable after</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- KICK-OFF -->
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <span class="timeline-phase-pct">5%</span>
+          <span class="timeline-phase-label">of project</span>
+        </div>
+        <div>
+          <div class="timeline-content">
+            <div class="phase-name">Phase 2 · Project Kick-Off</div>
+            <div class="phase-goal">Goal: Align everyone, set expectations, build a real plan</div>
+            <p class="phase-body">This is arguably the most leverage-heavy phase. The whole project's success depends on how well you execute it. You're generating buy-in, managing expectations upfront, and aligning everyone on the Odoo methodology — not the customer's preferred methodology.</p>
+            <div class="card-title" style="font-size: 14px; margin-bottom: 10px; margin-top: 16px;">Critical Outcomes</div>
+            <ul class="tip-list">
+              <li>SPoC understands and commits to the methodology</li>
+              <li>Expectations are set honestly — including the hard parts</li>
+              <li>Project plan is finalized</li>
+              <li>SPoC starts learning Odoo immediately</li>
+              <li>Change management strategy is activated</li>
+            </ul>
+            <div class="warning-box">
+              <div class="warning-icon">⚠️</div>
+              <div class="warning-text"><strong>Don't avoid hard conversations during Kick-Off.</strong> If the timeline looks too short, negotiate now. If there's misalignment on features, address it immediately. Inexperienced Project Managers delay difficult discussions — this is a top cause of late-stage project failure.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IMPLEMENTATION -->
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <span class="timeline-phase-pct">80%</span>
+          <span class="timeline-phase-label">of project</span>
+        </div>
+        <div>
+          <div class="timeline-content">
+            <div class="phase-name">Phase 3 · Implementation</div>
+            <div class="phase-goal">Goal: Build, configure, validate, and train in short cycles</div>
+            <p class="phase-body">The project moves forward in short weekly cycles — analysis, configuration, development (if needed), validation, and training. The solution is shaped progressively. The SPoC is engaged at every step. Momentum is everything here.</p>
+            <div class="card-title" style="font-size: 14px; margin-bottom: 10px; margin-top: 16px;">The Three Streams</div>
+            <ul class="tip-list">
+              <li><strong>Configuration:</strong> PL configures directly, including Studio; SPoC validates through training sessions</li>
+              <li><strong>Data Import:</strong> Import master data only; avoid full history; don't delay Go-Live for imperfect data</li>
+              <li><strong>Custom Dev:</strong> PL decides what's worth building; only "must-haves" before Go-Live; PL writes specs, SPoC attests business conformity</li>
+            </ul>
+            <div class="card-title" style="font-size: 14px; margin-bottom: 10px; margin-top: 20px;">Key Tips</div>
+            <ul class="tip-list">
+              <li>Have the SPoC drive the keyboard themselves — not just watch</li>
+              <li>Transform your project plan into a series of quick wins</li>
+              <li>Don't accept new change requests mid-cycle unless another requirement is dropped</li>
+              <li>Never implement something you're not convinced of — a contract is less important than project success</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- GO-LIVE -->
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <span class="timeline-phase-pct">5%</span>
+          <span class="timeline-phase-label">of project</span>
+        </div>
+        <div>
+          <div class="timeline-content">
+            <div class="phase-name">Phase 4 · Go-Live</div>
+            <div class="phase-goal">Goal: Put it in production — fast, even if imperfect</div>
+            <p class="phase-body">Issues at Go-Live are normal. They happen because the database wasn't fully tested or because users forgot their training. Your job is to react quickly, not to prevent all issues. <strong>Never push back the Go-Live date</strong> — the risks of delay almost always outweigh the risks of going live with known issues.</p>
+            <ul class="tip-list" style="margin-top: 16px;">
+              <li>Training is not a conference — have users do the flow themselves</li>
+              <li>Create momentum: make Go-Live something the team is eager for</li>
+              <li>React quickly to issues — it's okay to have problems if you fix them fast</li>
+              <li>Be on-site day one if there is strong user resistance</li>
+              <li>Check days later that they're actually using Odoo and not reverting to old software</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECOND DEPLOYMENT -->
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <span class="timeline-phase-pct">+</span>
+          <span class="timeline-phase-label">post Go-Live</span>
+        </div>
+        <div>
+          <div class="timeline-content">
+            <div class="phase-name">Phase 5 · Second Deployment & Progress Report</div>
+            <div class="phase-goal">Goal: Expand scope based on real production experience</div>
+            <p class="phase-body">About one month after Go-Live, the PL reviews the backlog of deferred development. This is where the real conversation about expansion happens. Typically, <strong>50% of planned development is no longer needed</strong> once users are in production — and new, better-informed requests emerge.</p>
+            <p class="phase-body" style="margin-top: 12px;">The <strong>Progress Report</strong> is a strategic tool for engaging top management — not just the SPoC. It uses a Digital Opportunities Matrix to identify what's next: Quick Wins, Game Changers, Fine Tuning, and items to Avoid. This is where organic upsell happens naturally.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 04 PROCESS CYCLE ═══ -->
+  <div id="process" class="section">
+    <div class="section-header">
+      <div class="section-eyebrow">Section 04</div>
+      <h2 class="section-title">The Process Cycle</h2>
+      <p class="section-lead">Within the Implementation phase, the team works in repeating short cycles. Each cycle follows the same sequence, delivering tangible progress every week and keeping the customer engaged.</p>
+    </div>
+
+    <div class="cycle-wrapper">
+      <div class="cycle-title">The Implementation Cycle · Repeats Weekly</div>
+      <div class="cycle-steps">
+        <div class="cycle-step">
+          <div class="cycle-step-num">Step 01</div>
+          <div class="cycle-step-name">Analyze</div>
+          <div class="cycle-step-desc">Analyze business workflows to determine configuration strategy. Ask "why" not just "what." Understand current state before designing future state.</div>
+        </div>
+        <div class="cycle-step">
+          <div class="cycle-step-num">Step 02</div>
+          <div class="cycle-step-name">Configure</div>
+          <div class="cycle-step-desc">Configure the workflow to meet business needs using Odoo standard features. If the result is unsatisfactory, return to analysis — not to custom development.</div>
+        </div>
+        <div class="cycle-step">
+          <div class="cycle-step-num">Step 03</div>
+          <div class="cycle-step-name">Test & Validate</div>
+          <div class="cycle-step-desc">SPoC and key users test the workflow and validate it for business use. If unsatisfactory, return to analysis and configuration — not the backlog.</div>
+        </div>
+        <div class="cycle-step">
+          <div class="cycle-step-num">Step 04</div>
+          <div class="cycle-step-name">Train Users</div>
+          <div class="cycle-step-desc">Train SPoC and key users on validated workflows. SPoC drives the mouse. Users teach users. Training is not a lecture — it's hands-on practice.</div>
+        </div>
+        <div class="cycle-step">
+          <div class="cycle-step-num">Step 05</div>
+          <div class="cycle-step-name">Import Data</div>
+          <div class="cycle-step-desc">SPoC gathers and prepares data files. Import master data only. Don't delay Go-Live for imperfect data — some cleaning can happen post-production.</div>
+        </div>
+        <div class="cycle-step">
+          <div class="cycle-step-num">Step 06</div>
+          <div class="cycle-step-name">Launch</div>
+          <div class="cycle-step-desc">Go live on the cycle's scope. Begin using workflows daily. Troubleshoot issues with the BSA immediately as they arise. Fast reaction beats perfect preparation.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h3">Support Structure</div>
+    <div class="grid-2">
+      <div class="card card-accent">
+        <div class="card-title">During Implementation</div>
+        <ul class="tip-list">
+          <li><strong>Implementation Consultant (BSA):</strong> Primary contact, functional expert, solutions architect, training lead</li>
+          <li><strong>Developer:</strong> Custom dev and technical questions only, time & materials</li>
+          <li><strong>App Expert:</strong> Peer review at critical decision points</li>
+        </ul>
+      </div>
+      <div class="card card-teal">
+        <div class="card-title">Post Go-Live</div>
+        <ul class="tip-list">
+          <li><strong>Account Manager:</strong> Billing, payments, contract questions</li>
+          <li><strong>Functional Support:</strong> Generic software questions and bug reports, 24/5 and free</li>
+          <li><strong>Implementation Consultant:</strong> Available for expansion phases, training, coaching</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="h3">The Digital Opportunities Matrix</div>
+    <div class="card" style="margin-bottom: 24px;">
+      <p class="card-body" style="margin-bottom: 20px;">Used during the Progress Report phase to identify what to tackle next. Every opportunity is plotted across two dimensions: <strong>potential impact</strong> and <strong>ease of transformation</strong>.</p>
+      <div class="grid-2">
+        <div class="tactic">
+          <div class="tactic-label">🚀 Quick Wins</div>
+          <div class="tactic-text">High impact + easy to implement. Top priority. Move on these first — they build momentum and visible ROI fast.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">🎯 Game Changers</div>
+          <div class="tactic-text">High impact + complex. Handle after quick wins. These transform the company but require planning and commitment.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">🔧 Fine Tuning</div>
+          <div class="tactic-text">Low impact + easy. Nice to have but not priority. Can be done when bandwidth allows.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">🚫 Avoid</div>
+          <div class="tactic-text">Low impact + complex. No real benefit here. Decline these confidently — the cost exceeds the value.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 05 CHALLENGES ═══ -->
+  <div id="challenges" class="section">
+    <div class="section-header">
+      <div class="section-eyebrow">Section 05</div>
+      <h2 class="section-title">Implementation Challenges</h2>
+      <p class="section-lead">Every project has predictable friction points. These aren't surprises — they're patterns. Knowing them in advance means you can navigate them instead of being blindsided by them.</p>
+    </div>
+
+    <div class="accordion-item open">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <div class="accordion-header-left">
+          <div class="accordion-icon">🔄</div>
+          <div class="accordion-title">How to Handle User Resistance to Change</div>
+        </div>
+        <div class="accordion-toggle">+</div>
+      </div>
+      <div class="accordion-body">
+        <p>Humans are deeply resistant to change — from the newest employee to the founder. Never put resistant people aside. Do the opposite: invest time in them. A change is always perceived as a cost and a risk. People will accept that cost if the benefit is clearly larger.</p>
+        <p>Don't tell them it's not risky or that it's "just a small change." Acknowledge the difficulty — then sell the benefit. Organize demos tailored to their pain points. If they can see the value, they'll accept the risk.</p>
+        <p><strong>Your resources for change management:</strong></p>
+        <div class="tactic">
+          <div class="tactic-label">The Product</div>
+          <div class="tactic-text">Once users see features that benefit them directly, acceptance increases rapidly. Train resistant users on the specific things that will make their daily work better.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">The SPoC & Key Users</div>
+          <div class="tactic-text">Their positivity and credibility within the company is your most powerful change management tool. The SPoC's internal reputation matters enormously.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">Executive Sponsorship</div>
+          <div class="tactic-text">The CEO visibly supporting the project changes the dynamic completely. Secure this during Kick-Off and remind the sponsor of their role when resistance escalates.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <div class="accordion-header-left">
+          <div class="accordion-icon">🛑</div>
+          <div class="accordion-title">How to Handle Custom Development Requests (4 Tactics)</div>
+        </div>
+        <div class="accordion-toggle">+</div>
+      </div>
+      <div class="accordion-body">
+        <p>Custom development costs ~25% of its original build cost every year in maintenance and upgrades. Project complexity grows <em>exponentially</em> with customizations — not linearly. Before agreeing to anything, run through all four of these challenges:</p>
+        <div class="tactic">
+          <div class="tactic-label">Tactic 1 · Is It Really Necessary?</div>
+          <div class="tactic-text">Did the customer have this feature in their old software? If not, they can live without it for now. Recommend going live without it and reassessing after production — priorities almost always change once users are live.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">Tactic 2 · Is It Worth Supporting the Cost?</div>
+          <div class="tactic-text">Evaluate the real benefit (hours saved per month) vs. the real cost (development + 2-3× in ongoing maintenance over 5 years). Customers typically only see the one-time dev cost — help them see the full picture.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">Tactic 3 · Is the Gain Significant Enough?</div>
+          <div class="tactic-text">Question the volume. If the feature saves 10 minutes but only applies to 2 cases per month, a 10-day development is never worth it. Quantify before building.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">Tactic 4 · Can We Serve the Same Need Differently?</div>
+          <div class="tactic-text">There is almost always a standard workaround, a simpler configuration, or a third-party service that solves the problem in hours instead of weeks. Always explore this before writing a line of code.</div>
+        </div>
+        <div class="warning-box">
+          <div class="warning-icon">💡</div>
+          <div class="warning-text">If you convince the customer to avoid a development, <em>tell them why</em>. The more they understand the reasoning, the more they'll trust your recommendations — and the more valuable your relationship becomes.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <div class="accordion-header-left">
+          <div class="accordion-icon">📊</div>
+          <div class="accordion-title">How to Manage Customer Expectations</div>
+        </div>
+        <div class="accordion-toggle">+</div>
+      </div>
+      <div class="accordion-body">
+        <p>Experienced Project Leaders set expectations aggressively upfront — not to discourage the customer, but to ensure that when things get hard (and they will), the customer doesn't abandon ship. If you promise less, you can over-deliver.</p>
+        <div class="tactic">
+          <div class="tactic-label">What to Tell Them Upfront</div>
+          <div class="tactic-text">This project will be difficult. There will be issues. But at the end, your company will be better. And I need you — as a CEO/sponsor — to support the project when your teams complain, not to fold.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">What Not to Say</div>
+          <div class="tactic-text">Never say "everything will go smoothly." Never say the change will be easy. Never set deadlines that are too short just to win the project. The short-term win creates a long-term problem.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <div class="accordion-header-left">
+          <div class="accordion-icon">🧠</div>
+          <div class="accordion-title">How to Keep Things Simple</div>
+        </div>
+        <div class="accordion-toggle">+</div>
+      </div>
+      <div class="accordion-body">
+        <p>Customers naturally add complexity. Your job is to strip it out — relentlessly. Simplicity is not a style preference; it's a risk reduction strategy.</p>
+        <div class="tactic">
+          <div class="tactic-label">Never Give Multiple Options</div>
+          <div class="tactic-text">When you present 3 options, the customer will spend days deliberating and then choose the most complex one. Propose the best solution. Let them challenge it — but you make the recommendation.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">Force Decisions</div>
+          <div class="tactic-text">Prevent customers from saying "let me check with the team" on every small decision. Delay creates debt. Push for answers in the moment whenever possible.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">Use App Expert Peer Reviews</div>
+          <div class="tactic-text">An external App Expert can make tough calls without political baggage. Involve them at critical phases like GAP Analysis — they'll often cut complexity that you've become too close to challenge.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <div class="accordion-header-left">
+          <div class="accordion-icon">🏛️</div>
+          <div class="accordion-title">How to Deal with Internal Politics</div>
+        </div>
+        <div class="accordion-toggle">+</div>
+      </div>
+      <div class="accordion-body">
+        <p>When things go wrong, people look for someone to blame. Internal politics is a game where everyone loses — including the project. The best move is to refuse to play.</p>
+        <div class="tactic">
+          <div class="tactic-label">Don't Build a Defense. Solve the Problem.</div>
+          <div class="tactic-text">When something fails, nobody cares whose fault it is as much as they care about what you're going to do about it. Focus entirely on moving forward — even if the issue isn't yours to own.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">Get Key-User Buy-In Before Starting</div>
+          <div class="tactic-text">Projects imposed from above — where the people using the software didn't choose it and weren't consulted — create resistance that can derail everything. Identify and address this dynamic during the Kick-Off.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <div class="accordion-header-left">
+          <div class="accordion-icon">📝</div>
+          <div class="accordion-title">How to Write a Good Specification</div>
+        </div>
+        <div class="accordion-toggle">+</div>
+      </div>
+      <div class="accordion-body">
+        <p>When custom development is truly necessary, the specification is the contract between the PL and the developer. A bad spec wastes everyone's time and creates costly rework.</p>
+        <div class="tactic">
+          <div class="tactic-label">Section 1 · Business Need</div>
+          <div class="tactic-text">The use case (what) and why the customer specifically needs this feature. Maximum 2-3 paragraphs. No technical language.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">Section 2 · Functional Specification</div>
+          <div class="tactic-text">The suggested solution using Odoo (how). Use screenshots or mockups with annotations. Visual beats verbal every time.</div>
+        </div>
+        <div class="tactic">
+          <div class="tactic-label">Section 3 · Technical Hints</div>
+          <div class="tactic-text">Things the developer specifically needs to watch out for. Edge cases, integration points, data considerations.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ 06 SELLING IT ═══ -->
+  <div id="sales" class="section">
+    <div class="section-header">
+      <div class="section-eyebrow">Section 06</div>
+      <h2 class="section-title">Selling the Methodology</h2>
+      <p class="section-lead">The methodology isn't just how we implement — it's our biggest competitive differentiator. Understanding how to position it in a sales context is as important as being able to execute it.</p>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">The Core Sales Truth</div>
+      <p>Odoo's #1 differentiator is <strong>transparency</strong>. Most competitors obscure their pricing, methodology, challenges, and legal terms. Odoo is openly transparent about all of them. Counterintuitively, this transparency is your most powerful closing tool. The more honest you are upfront, the greater your chances of winning the deal.</p>
+    </div>
+
+    <div class="h3">Odoo's Competitive Differentiators</div>
+    <div class="diff-grid">
+      <div class="diff-card">
+        <div class="diff-icon">💵</div>
+        <div class="diff-label">Transparent Pricing</div>
+        <div class="diff-desc">~7× lower than competitors' public prices. Always say "inexpensive" — never "cheap." Inexpensive = high value for low cost.</div>
+      </div>
+      <div class="diff-card">
+        <div class="diff-icon">🖥️</div>
+        <div class="diff-label">Free Demo Day 1</div>
+        <div class="diff-desc">Free 14-day trials, demos on day one. Most enterprise vendors won't demo until month 3. This alone is a differentiator.</div>
+      </div>
+      <div class="diff-card">
+        <div class="diff-icon">📋</div>
+        <div class="diff-label">Transparent Methodology</div>
+        <div class="diff-desc">We publish and share our implementation approach. No black box. Customers know what they're buying before they sign.</div>
+      </div>
+      <div class="diff-card">
+        <div class="diff-icon">⚡</div>
+        <div class="diff-label">Speed to Value</div>
+        <div class="diff-desc">95%+ success rate vs. industry average of less than 50%. Projects that others take 18 months to deliver, we deliver in 3-6.</div>
+      </div>
+      <div class="diff-card">
+        <div class="diff-icon">📣</div>
+        <div class="diff-label">Honest About Challenges</div>
+        <div class="diff-desc">We tell customers implementation is hard before they sign. This builds more trust than empty promises.</div>
+      </div>
+    </div>
+
+    <div class="h3">The 5 Sales Commandments</div>
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 8px;">
+      <div class="commandment-card">
+        <div class="commandment-num">01</div>
+        <div class="commandment-content">
+          <div class="commandment-title">Start Small, Grow Big</div>
+          <div class="commandment-body">It's easier to sell 2 apps than 10. And once you've sold 2 and delivered well, selling 10 becomes natural. Encourage customers to start with their core need and expand. This reduces their risk, your risk, and creates long-term engagement.</div>
+        </div>
+      </div>
+      <div class="commandment-card">
+        <div class="commandment-num">02</div>
+        <div class="commandment-content">
+          <div class="commandment-title">Control the Buying Process</div>
+          <div class="commandment-body">Know who is involved in the decision, what they need to see, and how they perceive risk. Ask transparently. If you don't understand how they buy, you have blind spots. Qualify the buying process as aggressively as you qualify the requirements.</div>
+        </div>
+      </div>
+      <div class="commandment-card">
+        <div class="commandment-num">03</div>
+        <div class="commandment-content">
+          <div class="commandment-title">Don't Let Requirements Grow Legs</div>
+          <div class="commandment-body">Start and end every call by reinforcing the customer's primary requirements. If the list becomes contaminated with unnecessary items, cut it back. Requirement creep in pre-sales kills deals — customers experience it as uncertainty and risk.</div>
+        </div>
+      </div>
+      <div class="commandment-card">
+        <div class="commandment-num">04</div>
+        <div class="commandment-content">
+          <div class="commandment-title">Sell Out-of-the-Box. Challenge Dev Requests.</div>
+          <div class="commandment-body">Inexperienced salespeople are afraid to challenge customers in pre-sales. But customers respect being challenged — it signals expertise. Every development request added pre-sale increases the customer's perceived risk. Risks kill deals.</div>
+        </div>
+      </div>
+      <div class="commandment-card">
+        <div class="commandment-num">05</div>
+        <div class="commandment-content">
+          <div class="commandment-title">Cut Down the Number of Decision-Makers You Deal With Directly</div>
+          <div class="commandment-body">When too many people feed you requirements, you can't separate priorities from noise. Focus your communication on the actual decision-maker. More people ≠ more information. It means more confusion and longer cycles.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h3">Selling by Company Size</div>
+    <div class="grid-2" style="margin-top: 8px;">
+      <div class="card card-accent">
+        <div class="card-title">Small Companies</div>
+        <p class="card-body">Get them in front of the product on the first call — ideally in the first conversation. Your goal is to show them what the standard solution does and demonstrate key features they care about. Show Odoo Studio for minor customizations. The sooner you can demo and discuss ROI on the fly, the more QuickStart projects you'll close.</p>
+      </div>
+      <div class="card card-teal">
+        <div class="card-title">Large Enterprises</div>
+        <p class="card-body">Same principles — demo ASAP, keep it simple — but structured differently: (1) Get them to want Odoo as a product first. (2) Sell the ROI Analysis. (3) Then sell the full implementation. You're selling yourself as a business partner, not just a product. Get software in front of them on day one of evaluation — most competitors won't do this.</p>
+      </div>
+    </div>
+
+    <div class="story-card" style="margin-top: 40px;">
+      <span class="story-quote">"</span>
+      <p class="story-text">I set the right expectations from the start. I explained that I will say no to any development requests unless the need is a justified must-have and there is no appropriate workaround. Doing this changed everything. The customer became really open to my suggestions and we saved 100 hours of development by using standard workarounds.</p>
+      <div class="story-author">— Audric, Project Leader, Odoo BE · on why challenging customers wins trust</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">The Bottom Line for Sales</div>
+      <p>The methodology <em>is</em> the pitch. When you explain to a prospect that Odoo delivers 95%+ implementation success because we stay standard, move fast, and manage expectations honestly — while competitors charge 3–5× more and succeed less than 50% of the time — you're not describing a process. You're making an argument for why they should trust you with their business. The methodology is the product.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Odoo Implementation Playbook · Internal Reference · Based on Implementation Methodology (Nov 2020) and QuickStart Documentation
+</div>
+
+<script>
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: document.querySelector('.nav-wrapper').offsetTop - 10, behavior: 'smooth' });
+  }
+
+  function toggleAccordion(header) {
+    const item = header.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+</script>
+</body>
+</html>
