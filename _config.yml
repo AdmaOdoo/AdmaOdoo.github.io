@@ -1,3 +1,4 @@
 theme: jekyll-theme-cayman
 title: Odoo Implementation Resources
 description: Training and implementation guides for the Sales team.
+cayman_header: false
